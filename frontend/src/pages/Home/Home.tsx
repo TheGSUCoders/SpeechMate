@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import UploadIcon from '../../components/icons/UploadIcon';
@@ -16,10 +16,28 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080
 
 function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [animationState, setAnimationState] = useState('initial');
   const [showButtons, setShowButtons] = useState(false);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
+  const skipAnimation = Boolean((location.state as { skipAnimation?: boolean } | null)?.skipAnimation);
+
+  useEffect(() => {
+    const alreadyPlayed = typeof window !== 'undefined' && sessionStorage.getItem('homeAnimationPlayed') === 'true';
+    setShouldAnimate(!skipAnimation && !alreadyPlayed);
+
+    if (skipAnimation && typeof window !== 'undefined') {
+      sessionStorage.setItem('homeAnimationPlayed', 'true');
+    }
+  }, [skipAnimation]);
+
+  useEffect(() => {
+    if (skipAnimation) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [skipAnimation, navigate, location.pathname]);
 
   useEffect(() => {
     axios
@@ -27,27 +45,36 @@ function Home() {
       .then(({ data }) => {
         if (data?.authenticated) {
           setUser(data);
-          // Start the animation after user data is loaded
-          const animationTimer = setTimeout(() => {
-            setAnimationState('final');
-          }, 1000); // 1-second delay before animating
+          if (shouldAnimate) {
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('homeAnimationPlayed', 'true');
+            }
+            const animationTimer = setTimeout(() => {
+              setAnimationState('final');
+            }, 1000);
+            return () => {
+              clearTimeout(animationTimer);
+            };
+          }
 
-          // Show buttons 2 seconds after the welcome animation starts
-          const buttonsTimer = setTimeout(() => {
-            setShowButtons(true);
-          }, 3000); // Welcome animation starts at 1s, buttons at 3s
-
-          return () => {
-            clearTimeout(animationTimer);
-            clearTimeout(buttonsTimer);
-          };
+          setAnimationState('final');
         } else {
           navigate('/', { replace: true });
         }
       })
       .catch(() => navigate('/', { replace: true }))
       .finally(() => setLoading(false));
-  }, [navigate]);
+  }, [navigate, shouldAnimate]);
+
+  useEffect(() => {
+    if (animationState !== 'final' || showButtons) {
+      return;
+    }
+
+  const delay = shouldAnimate ? 3000 : 0;
+    const timer = setTimeout(() => setShowButtons(true), delay);
+    return () => clearTimeout(timer);
+  }, [animationState, showButtons, shouldAnimate]);
 
   const handleLogout = async () => {
     try {
@@ -59,6 +86,9 @@ function Home() {
     } catch (err) {
       console.error('Failed to logout', err);
     } finally {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('homeAnimationPlayed');
+      }
       navigate('/', { replace: true });
     }
   };
@@ -73,8 +103,7 @@ function Home() {
   };
 
   const handleGenerateSpeech = () => {
-    // Placeholder for speech generation logic
-    alert('Speech generation and download feature coming soon!');
+    navigate('/generate-speech');
   };
 
   if (loading) {
@@ -115,7 +144,7 @@ function Home() {
                 y: -window.innerHeight / 2 + 60, // Move to top
                 scale: 0.6, // Shrink
                 opacity: 1, // Remain visible
-                transition: { duration: 1.5, ease: "circOut", delay: 1 }
+                transition: { duration: 2, ease: "circOut", delay: 1 }
               }
             }}
             initial="initial"
@@ -125,33 +154,36 @@ function Home() {
           </motion.div>
         </AnimatePresence>
 
-        <AnimatePresence>
-          {showButtons && (
-            <motion.div
-              className="action-buttons"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            >
-              <label htmlFor="file-upload" className="action-button">
-                <UploadIcon className="button-icon" />
-                <input 
-                  type="file" 
-                  id="file-upload" 
-                  accept=".pdf,.doc,.docx,.png" 
-                  style={{ display: 'none' }}
-                  onChange={handleFileUpload}
-                />
-                Upload Speech Material
-              </label>
-              <button className="action-button" onClick={handleGenerateSpeech}>
-                <GenerateIcon className="button-icon" />
-                Generate Speech from Scratch
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="action-container">
+          <AnimatePresence>
+            {showButtons && (
+              <motion.div
+                className="action-buttons"
+                key="action-buttons"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20, position: 'absolute' }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              >
+                <label htmlFor="file-upload" className="action-button">
+                  <UploadIcon className="button-icon" />
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept=".pdf,.doc,.docx,.png"
+                    style={{ display: 'none' }}
+                    onChange={handleFileUpload}
+                  />
+                  Upload Speech Material
+                </label>
+                <button className="action-button" onClick={handleGenerateSpeech}>
+                  <GenerateIcon className="button-icon" />
+                  Generate Speech from Scratch
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </main>
   );
