@@ -165,8 +165,22 @@ function VideoRecording() {
   };
 
   const handleSubmit = () => {
-    // For now, just navigate to home with success message
-    // In future, this will send video + files to backend
+    // Store video blob in sessionStorage for use in Generate Speech
+    if (recordedVideoUrl && recordedVideoBlob) {
+      // Store video metadata
+      sessionStorage.setItem('recordedVideoAvailable', 'true');
+      sessionStorage.setItem('recordedVideoDuration', recordedTime.toString());
+      sessionStorage.setItem('recordedVideoFilesCount', uploadedFiles.length.toString());
+      
+      // Store blob for later use
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        sessionStorage.setItem('recordedVideoBlob', reader.result as string);
+      };
+      reader.readAsDataURL(recordedVideoBlob);
+    }
+    
+    // Navigate to home with success message
     navigate('/home', {
       state: {
         message: 'Speech recording completed successfully!',
