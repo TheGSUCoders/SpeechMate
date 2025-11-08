@@ -43,6 +43,16 @@ function Home() {
       .then(({ data }) => {
         if (data?.authenticated) {
           setUser(data);
+          
+          // Preload speech tips in the background
+          axios.get(`${API_BASE_URL}/api/gemini/speech-tips`, { withCredentials: true })
+            .then(response => {
+              // Cache the tips in sessionStorage
+              sessionStorage.setItem('speechTips', JSON.stringify(response.data));
+              console.log('Speech tips preloaded and cached');
+            })
+            .catch(err => console.error('Failed to preload speech tips:', err));
+          
           if (shouldAnimate) {
             if (typeof window !== 'undefined') {
               sessionStorage.setItem('homeAnimationPlayed', 'true');
@@ -91,13 +101,8 @@ function Home() {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('File uploaded:', file.name);
-      // Placeholder for file handling logic
-      alert(`You've selected ${file.name}. File handling coming soon!`);
-    }
+  const handleUploadClick = () => {
+    navigate('/file-upload');
   };
 
   const handleGenerateSpeech = () => {
@@ -173,15 +178,8 @@ function Home() {
                 exit={{ opacity: 0, y: -20, position: 'absolute' }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               >
-                <label htmlFor="file-upload" className="action-button">
+                <label htmlFor="file-upload" className="action-button" onClick={handleUploadClick}>
                   <UploadIcon className="button-icon" />
-                  <input
-                    type="file"
-                    id="file-upload"
-                    accept=".pdf,.doc,.docx,.png"
-                    style={{ display: 'none' }}
-                    onChange={handleFileUpload}
-                  />
                   Upload Speech Material
                 </label>
                 <button className="action-button" onClick={handleGenerateSpeech}>
