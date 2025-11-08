@@ -5,6 +5,7 @@ import GenerateSpeech from './pages/GenerateSpeech/GenerateSpeech';
 import SpeechResult from './pages/SpeechResult/SpeechResult';
 import FileUpload from './pages/FileUpload/FileUpload';
 import VideoRecording from './pages/VideoRecording/VideoRecording';
+import SpeechAnalysis from './pages/SpeechAnalysis/SpeechAnalysis';
 import './App.css';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/speech-result" element={<SpeechResult />} />
         <Route path="/file-upload" element={<FileUpload />} />
         <Route path="/record-video" element={<VideoRecording />} />
+        <Route path="/speech-analysis" element={<SpeechAnalysis />} />
       </Routes>
     </Router>
   );

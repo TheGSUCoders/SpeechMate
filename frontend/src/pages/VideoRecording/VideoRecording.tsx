@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './VideoRecording.css';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
 interface UploadedFileInfo {
   name: string;
@@ -28,6 +32,7 @@ function VideoRecording() {
   const [recordedVideoBlob, setRecordedVideoBlob] = useState<Blob | null>(null);
   const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MAX_RECORDING_TIME = 5 * 60; // 5 minutes in seconds
 
@@ -164,29 +169,83 @@ function VideoRecording() {
     requestPermissions();
   };
 
-  const handleSubmit = () => {
-    // Store video blob in sessionStorage for use in Generate Speech
-    if (recordedVideoUrl && recordedVideoBlob) {
-      // Store video metadata
+  const handleSubmit = async () => {
+    if (!recordedVideoBlob) {
+      alert('No video recorded. Please record a video first.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // Create FormData to send video and files
+      const formData = new FormData();
+      
+      // Add video file first
+      const videoFile = new File([recordedVideoBlob], 'recorded-speech.webm', {
+        type: 'video/webm'
+      });
+      formData.append('files', videoFile);
+      
+      // Add uploaded files
+      uploadedFiles.forEach(fileInfo => {
+        formData.append('files', fileInfo.file);
+      });
+      
+      // Add optional metadata as separate parameters (not in files array)
+      if (recordedTime) {
+        formData.append('duration', Math.floor(recordedTime).toString());
+      }
+      
+      console.log('Submitting speech analysis with:', {
+        videoFile: videoFile.name,
+        videoSize: videoFile.size,
+        uploadedFilesCount: uploadedFiles.length,
+        duration: recordedTime
+      });
+      
+      // Call analyze-speech endpoint
+      const response = await axios.post(
+        `${API_BASE_URL}/api/gemini/analyze-speech`,
+        formData,
+        {
+          withCredentials: true,
+          timeout: 120000, // 2 minute timeout for analysis
+        }
+      );
+      
+      console.log('Analysis response:', response.data);
+      
+      // Store video in sessionStorage for future use
       sessionStorage.setItem('recordedVideoAvailable', 'true');
       sessionStorage.setItem('recordedVideoDuration', recordedTime.toString());
       sessionStorage.setItem('recordedVideoFilesCount', uploadedFiles.length.toString());
       
-      // Store blob for later use
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        sessionStorage.setItem('recordedVideoBlob', reader.result as string);
-      };
-      reader.readAsDataURL(recordedVideoBlob);
-    }
-    
-    // Navigate to home with success message
-    navigate('/home', {
-      state: {
-        message: 'Speech recording completed successfully!',
-        skipAnimation: true
+      // Navigate to analysis results page
+      navigate('/speech-analysis', {
+        state: {
+          analysis: response.data,
+          videoDuration: recordedTime,
+          filesCount: uploadedFiles.length
+        }
+      });
+    } catch (error) {
+      console.error('Failed to analyze speech:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          alert('Request timed out. The video analysis is taking longer than expected. Please try again.');
+        } else if (error.response) {
+          alert(`Failed to analyze speech: ${error.response.data?.message || error.response.statusText}`);
+        } else if (error.request) {
+          alert('No response from server. Please check if the backend is running.');
+        } else {
+          alert('Failed to analyze speech. Please try again.');
+        }
+      } else {
+        alert('An unexpected error occurred. Please try again.');
       }
-    });
+      setIsSubmitting(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -196,7 +255,9 @@ function VideoRecording() {
   };
 
   return (
-    <div className="video-recording-wrapper">
+    <>
+      {isSubmitting && <LoadingSpinner />}
+      <div className="video-recording-wrapper">
       <motion.div
         className="video-recording-container"
         initial={{ opacity: 0, y: 20 }}
@@ -290,6 +351,7 @@ function VideoRecording() {
         </div>
       </motion.div>
     </div>
+    </>
   );
 }
 

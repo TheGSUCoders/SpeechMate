@@ -333,7 +333,7 @@ public class GeminiService {
             // Call Gemini 2.5 Pro (best for multimodal analysis)
             @SuppressWarnings("unchecked")
             Map<String, Object> response = (Map<String, Object>) webClient.post()
-                .uri("/v1beta/models/gemini-2.5-pro-002:generateContent?key=" + apiKey)
+                .uri("/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
