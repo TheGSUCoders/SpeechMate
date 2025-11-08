@@ -1,9 +1,38 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { GoogleIcon } from '../../components/icons/GoogleIcon';
 import './Login.css'
 
+type UserInfo = {
+  authenticated: boolean;
+  name?: string;
+  email?: string;
+  picture?: string;
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+
 function Login() {
+  const navigate = useNavigate();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    axios
+      .get<UserInfo>(`${API_BASE_URL}/api/user`, { withCredentials: true })
+      .then(({ data }) => {
+        if (data?.authenticated) {
+          navigate('/home', { replace: true });
+        }
+      })
+      .catch(() => {
+        /* no-op */
+      })
+      .finally(() => setCheckingAuth(false));
+  }, [navigate]);
+
   const handleGoogleSignIn = () => {
-    alert('Google sign-in coming soon.');
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
   }
 
   return (
@@ -19,9 +48,14 @@ function Login() {
           <p className="subtitle">Use your Google account to continue.</p>
         </header>
 
-        <button className="google-button" onClick={handleGoogleSignIn} aria-label="Sign in with Google">
+        <button
+          className="google-button"
+          onClick={handleGoogleSignIn}
+          aria-label="Sign in with Google"
+          disabled={checkingAuth}
+        >
           <GoogleIcon />
-          <span>Sign in with Google</span>
+          <span>{checkingAuth ? 'Checking…' : 'Sign in with Google'}</span>
         </button>
 
       </section>
