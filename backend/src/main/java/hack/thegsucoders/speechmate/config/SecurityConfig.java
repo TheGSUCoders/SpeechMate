@@ -1,23 +1,36 @@
 package hack.thegsucoders.speechmate.config;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
+        "http://localhost:5173",
+        "https://ashy-glacier-0f328380f.3.azurestaticapps.net",
+        "https://thespeechmate.tech",
+        "https://www.thespeechmate.tech"
+    );
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository) throws Exception {
@@ -32,10 +45,17 @@ public class SecurityConfig {
                 .authorizationEndpoint(authorization ->
                     authorization.authorizationRequestResolver(customAuthorizationRequestResolver(clientRegistrationRepository))
                 )
-                .defaultSuccessUrl("http://localhost:5173", true)
+                .successHandler(oAuth2AuthenticationSuccessHandler())
             )
             .logout(logout -> logout
-                .logoutSuccessUrl("http://localhost:5173").permitAll()
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    String origin = request.getHeader("Origin");
+                    String redirectUrl = (origin != null && ALLOWED_ORIGINS.contains(origin)) 
+                        ? origin 
+                        : "http://localhost:5173";
+                    response.sendRedirect(redirectUrl);
+                })
+                .permitAll()
             );
 
         return http.build();
@@ -56,14 +76,38 @@ public class SecurityConfig {
     }
 
     @Bean
+    public SimpleUrlAuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler() {
+        return new SimpleUrlAuthenticationSuccessHandler() {
+            @Override
+            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                                Authentication authentication) throws IOException {
+                String origin = request.getHeader("Origin");
+                String referer = request.getHeader("Referer");
+                
+                // Determine redirect URL based on origin or referer
+                String redirectUrl = "http://localhost:5173";
+                
+                if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
+                    redirectUrl = origin;
+                } else if (referer != null) {
+                    // Extract origin from referer
+                    for (String allowedOrigin : ALLOWED_ORIGINS) {
+                        if (referer.startsWith(allowedOrigin)) {
+                            redirectUrl = allowedOrigin;
+                            break;
+                        }
+                    }
+                }
+                
+                response.sendRedirect(redirectUrl);
+            }
+        };
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",
-            "https://ashy-glacier-0f328380f.3.azurestaticapps.net",
-            "https://thespeechmate.tech",
-            "https://www.thespeechmate.tech"
-        ));
+        configuration.setAllowedOrigins(ALLOWED_ORIGINS);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
