@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -29,16 +28,6 @@ public class GeminiController {
         return ResponseEntity.ok(tips);
     }
 
-    /**
-     * Analyze uploaded speech materials (multimodal)
-     * Accepts: video (mp4, webm), slides (pptx, pdf), documents (docx, txt), images (jpg, png)
-     * @param files Uploaded files
-     * @param topic Speech topic (optional)
-     * @param audience Target audience (optional)
-     * @param duration Speech duration in seconds (optional)
-     * @param goals Speaker's improvement goals (optional)
-     * @return Comprehensive analysis with scores, feedback, and YouTube recommendations
-     */
     @PostMapping(value = "/analyze-speech", consumes = "multipart/form-data")
     public ResponseEntity<Map<String, Object>> analyzeSpeech(
             @RequestParam("files") List<MultipartFile> files,
@@ -47,14 +36,7 @@ public class GeminiController {
             @RequestParam(required = false) Integer duration,
             @RequestParam(required = false) String goals
     ) {
-        // Build context map
-        Map<String, Object> context = new HashMap<>();
-        if (topic != null) context.put("topic", topic);
-        if (audience != null) context.put("audience", audience);
-        if (duration != null) context.put("duration", duration);
-        if (goals != null) context.put("goals", goals);
-
-        Map<String, Object> analysis = geminiService.analyzeSpeechPerformance(files, context);
+        Map<String, Object> analysis = geminiService.analyzeSpeechPerformance(files, topic, audience, duration, goals);
         return ResponseEntity.ok(analysis);
     }
 }

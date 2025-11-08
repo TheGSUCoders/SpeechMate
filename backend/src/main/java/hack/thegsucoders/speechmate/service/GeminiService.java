@@ -188,17 +188,24 @@ public class GeminiService {
      * Analyze uploaded speech materials (video, slides, documents, images) using Gemini 2.5 Pro
      * Provides comprehensive feedback on delivery, content, and areas for improvement
      * @param files List of uploaded files (video, ppt, pdf, images, etc.)
-     * @param context Optional context (topic, audience, duration, goals)
+     * @param topic Optional speech topic
+     * @param audience Optional target audience
+     * @param duration Optional speech duration in seconds
+     * @param goals Optional speaker's improvement goals
      * @return Detailed analysis with scores, feedback, and YouTube recommendations
      */
-    public Map<String, Object> analyzeSpeechPerformance(List<MultipartFile> files, Map<String, Object> context) {
+    public Map<String, Object> analyzeSpeechPerformance(
+            List<MultipartFile> files, 
+            String topic, 
+            String audience, 
+            Integer duration, 
+            String goals) {
         try {
-            // Extract context information
-            String topic = (String) context.getOrDefault("topic", "unknown topic");
-            String audience = (String) context.getOrDefault("audience", "general audience");
-            Object durationObj = context.get("duration");
-            int durationSeconds = durationObj != null ? ((Number) durationObj).intValue() : 0;
-            String goals = (String) context.getOrDefault("goals", "improve public speaking skills");
+            // Set defaults for optional parameters
+            String speechTopic = topic != null ? topic : "unknown topic";
+            String targetAudience = audience != null ? audience : "general audience";
+            int durationSeconds = duration != null ? duration : 0;
+            String speakerGoals = goals != null ? goals : "improve public speaking skills";
 
             // Build comprehensive analysis prompt
             String prompt = String.format(
@@ -288,7 +295,7 @@ public class GeminiService {
                 "}\n\n" +
                 "Be specific, constructive, and actionable. Provide exact counts/frequencies where possible. " +
                 "Tailor YouTube recommendations to the speaker's specific weaknesses. Return ONLY valid JSON.",
-                topic, audience, durationSeconds, goals
+                speechTopic, targetAudience, durationSeconds, speakerGoals
             );
 
             // Build multimodal content parts
