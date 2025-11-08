@@ -47,24 +47,36 @@ function Home() {
   if (loading) {
     return (
       <main className="home-wrapper">
-        <section className="home-card">
-          <p>Loading…</p>
-        </section>
+        <div className="spinner" />
+        <p className="loading-text">Loading...</p>
       </main>
     );
   }
 
   return (
     <main className="home-wrapper">
-      <section className="home-card" role="region" aria-live="polite">
-        <div className="home-header">
-          <h1>Welcome back{user?.name ? `, ${user.name}` : ''}!</h1>
-          <p>{user?.email}</p>
+      <nav className="nav-bar">
+        <div className="brand-logo">
+          <span className="brand-icon">SM</span>
+          <span className="brand-name">SpeechMate</span>
         </div>
+        
         <button className="logout-button" onClick={handleLogout}>
-          Log out
+          <svg className="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Sign Out
         </button>
-      </section>
+      </nav>
+
+      <div className="content-wrapper">
+        <div className="welcome-section">
+          <h1 className="user-name">Welcome, {user?.name || 'User'}</h1>
+          <p className="user-email">{user?.email}</p>
+        </div>
+      </div>
     </main>
   );
 }
