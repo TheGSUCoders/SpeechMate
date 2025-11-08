@@ -124,30 +124,37 @@
 .form-actions button {
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  border: none;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
+  transition: all 0.3s ease;
   font-family: 'Roboto', sans-serif;
+  backdrop-filter: blur(10px);
 }
 
 .form-actions .cancel-button {
-  background-color: #4a4a6a;
-  color: #e0e0e0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .form-actions .cancel-button:hover {
-  background-color: #5a5a7a;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
 
 .form-actions .generate-button {
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-  color: #ffffff;
+  background: rgba(147, 51, 234, 0.15);
+  border: 1px solid rgba(147, 51, 234, 0.5);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .form-actions .generate-button:hover {
-  filter: brightness(1.1);
+  background: rgba(147, 51, 234, 0.25);
+  border-color: rgba(147, 51, 234, 0.7);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
 }
 
 @media (max-width: 768px) {

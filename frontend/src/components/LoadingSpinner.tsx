@@ -8,6 +8,7 @@ interface LoadingSpinnerProps {
 export default function LoadingSpinner({ message }: LoadingSpinnerProps) {
   const [currentTip, setCurrentTip] = useState('Generating your speech...');
   const [tips, setTips] = useState<string[]>([]);
+  const [lastTipIndex, setLastTipIndex] = useState(-1);
 
   useEffect(() => {
     // Load tips from cache
@@ -23,7 +24,10 @@ export default function LoadingSpinner({ message }: LoadingSpinnerProps) {
             const tipsJson = JSON.parse(tipsMatch[0]);
             if (tipsJson.tips && Array.isArray(tipsJson.tips)) {
               setTips(tipsJson.tips);
-              setCurrentTip(tipsJson.tips[0]);
+              // Pick a random starting tip
+              const randomStart = Math.floor(Math.random() * tipsJson.tips.length);
+              setCurrentTip(tipsJson.tips[randomStart]);
+              setLastTipIndex(randomStart);
             }
           }
         }
@@ -36,14 +40,19 @@ export default function LoadingSpinner({ message }: LoadingSpinnerProps) {
   useEffect(() => {
     if (tips.length === 0) return;
 
-    let index = 0;
     const interval = setInterval(() => {
-      index = (index + 1) % tips.length;
-      setCurrentTip(tips[index]);
+      // Pick a random tip that's different from the last one
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * tips.length);
+      } while (randomIndex === lastTipIndex && tips.length > 1);
+      
+      setCurrentTip(tips[randomIndex]);
+      setLastTipIndex(randomIndex);
     }, 4000); // Change tip every 4 seconds
 
     return () => clearInterval(interval);
-  }, [tips]);
+  }, [tips, lastTipIndex]);
 
   return (
     <div className="loading-overlay">

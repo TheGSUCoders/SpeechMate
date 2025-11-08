@@ -2,7 +2,10 @@
 
 .file-upload-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(88, 28, 135, 0.1), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(78, 41, 156, 0.08), transparent 45%),
+    linear-gradient(180deg, #0a0118 0%, #050011 50%, #000000 100%);
   padding: 2rem;
   display: flex;
   justify-content: center;
@@ -93,9 +96,9 @@
 }
 
 .browse-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
   padding: 0.75rem 2rem;
   border-radius: 10px;
   font-size: 1rem;
@@ -103,11 +106,14 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Roboto', sans-serif;
+  backdrop-filter: blur(10px);
 }
 
 .browse-button:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: rgba(147, 51, 234, 0.15);
+  border-color: rgba(147, 51, 234, 0.5);
   transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.2);
 }
 
 .file-info {
@@ -243,27 +249,30 @@
 }
 
 .cancel-button {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
 }
 
 .cancel-button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
 }
 
 .continue-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: rgba(147, 51, 234, 0.15);
+  border: 1px solid rgba(147, 51, 234, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
 }
 
 .continue-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: rgba(147, 51, 234, 0.25);
+  border-color: rgba(147, 51, 234, 0.7);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
 }
 
 .continue-button:disabled {
