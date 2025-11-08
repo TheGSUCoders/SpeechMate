@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleIcon } from '../../components/icons/GoogleIcon';
-import './Login.css'
+import './Login.css';
 
 type UserInfo = {
   authenticated: boolean;
@@ -26,14 +26,14 @@ function Login() {
         }
       })
       .catch(() => {
-        /* no-op */
+        /* ignore unauthenticated */
       })
       .finally(() => setCheckingAuth(false));
   }, [navigate]);
 
   const handleGoogleSignIn = () => {
-    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
-  }
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google?prompt=select_account`;
+  };
 
   return (
     <main className="auth-wrapper">
@@ -55,12 +55,12 @@ function Login() {
           disabled={checkingAuth}
         >
           <GoogleIcon />
-          <span>{checkingAuth ? 'Checking…' : 'Sign in with Google'}</span>
+          <span>{checkingAuth ? 'Checking...' : 'Sign in with Google'}</span>
         </button>
 
       </section>
     </main>
-  )
+  );
 }
 
 export default Login;
