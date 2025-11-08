@@ -38,8 +38,8 @@ function FileUpload() {
       return false;
     }
 
-    if (file.size > 50 * 1024 * 1024) { // 50MB limit
-      setError('File size must be less than 50MB');
+    if (file.size > 200 * 1024 * 1024) { // 200MB limit
+      setError('File size must be less than 200MB');
       return false;
     }
 
@@ -112,11 +112,7 @@ function FileUpload() {
   };
 
   const handleContinue = () => {
-    if (uploadedFiles.length === 0) {
-      setError('Please upload at least one file to continue');
-      return;
-    }
-    
+    // Allow continuing even without files
     // Navigate to video recording page
     navigate('/record-video', {
       state: {
@@ -175,7 +171,7 @@ function FileUpload() {
 
           <div className="file-info">
             <p>Supported formats: PDF, PowerPoint, Word, PNG, JPG</p>
-            <p>Maximum file size: 50MB per file</p>
+            <p>Maximum file size: 200MB per file</p>
           </div>
         </div>
 
@@ -215,7 +211,6 @@ function FileUpload() {
           <button 
             className="continue-button" 
             onClick={handleContinue}
-            disabled={uploadedFiles.length === 0}
           >
             Continue to Record Video
           </button>

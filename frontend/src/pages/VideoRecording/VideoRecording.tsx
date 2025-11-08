@@ -26,6 +26,7 @@ function VideoRecording() {
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [recordedVideoBlob, setRecordedVideoBlob] = useState<Blob | null>(null);
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
   const MAX_RECORDING_TIME = 5 * 60; // 5 minutes in seconds
@@ -35,8 +36,12 @@ function VideoRecording() {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
+      // Clean up video URL
+      if (recordedVideoUrl) {
+        URL.revokeObjectURL(recordedVideoUrl);
+      }
     };
-  }, [stream]);
+  }, [stream, recordedVideoUrl]);
 
   useEffect(() => {
     let interval: number | null = null;
@@ -106,20 +111,11 @@ function VideoRecording() {
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'video/webm' });
         setRecordedVideoBlob(blob);
-        setShowPreview(true);
         
-        // Store in localStorage
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64data = reader.result as string;
-          localStorage.setItem('recordedSpeechVideo', base64data);
-          localStorage.setItem('recordedSpeechVideoMetadata', JSON.stringify({
-            timestamp: new Date().toISOString(),
-            duration: recordedTime,
-            filesCount: uploadedFiles.length
-          }));
-        };
-        reader.readAsDataURL(blob);
+        // Create object URL for video preview
+        const videoUrl = URL.createObjectURL(blob);
+        setRecordedVideoUrl(videoUrl);
+        setShowPreview(true);
       };
 
       mediaRecorder.start();
@@ -156,11 +152,15 @@ function VideoRecording() {
   };
 
   const handleRetake = () => {
+    // Clean up previous video URL
+    if (recordedVideoUrl) {
+      URL.revokeObjectURL(recordedVideoUrl);
+    }
+    
     setRecordedVideoBlob(null);
+    setRecordedVideoUrl(null);
     setShowPreview(false);
     setRecordedTime(0);
-    localStorage.removeItem('recordedSpeechVideo');
-    localStorage.removeItem('recordedSpeechVideoMetadata');
     requestPermissions();
   };
 
@@ -169,7 +169,7 @@ function VideoRecording() {
     // In future, this will send video + files to backend
     navigate('/home', {
       state: {
-        message: 'Speech recording saved successfully! Backend integration pending.',
+        message: 'Speech recording completed successfully!',
         skipAnimation: true
       }
     });
@@ -212,13 +212,15 @@ function VideoRecording() {
               playsInline
               className="video-preview"
             />
-          ) : (
+          ) : recordedVideoUrl ? (
             <video
-              src={recordedVideoBlob ? URL.createObjectURL(recordedVideoBlob) : ''}
+              key={recordedVideoUrl}
+              src={recordedVideoUrl}
               controls
+              playsInline
               className="video-preview"
             />
-          )}
+          ) : null}
         </div>
 
         {!hasPermission && !showPreview && (
@@ -255,7 +257,6 @@ function VideoRecording() {
           <div className="preview-controls">
             <div className="recording-info">
               <p>Recording Duration: {formatTime(recordedTime)}</p>
-              <p className="saved-info">✓ Video saved to local storage</p>
             </div>
             <div className="action-buttons">
               <button className="retake-button" onClick={handleRetake}>
