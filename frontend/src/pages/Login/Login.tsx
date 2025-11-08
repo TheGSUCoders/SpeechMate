@@ -39,8 +39,12 @@ function Login() {
     <main className="auth-wrapper">
       <section className="auth-card" role="region" aria-label="Sign in">
         <div className="brand">
-          <div className="brand-mark">SM</div>
-          <div className="brand-text">SpeechMate</div>
+          <img 
+            src="/SpeechMateFull.png" 
+            alt="Speech Mate" 
+            className="brand-logo"
+            style={{ height: '80px' }}
+          />
         </div>
 
         <header className="auth-header">

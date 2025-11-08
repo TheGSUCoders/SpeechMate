@@ -28,25 +28,18 @@
   gap: 0.75rem;
 }
 
-.brand-icon {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-  border-radius: 10px;
-  font-weight: 800;
-  font-size: 1rem;
-  color: white;
-  letter-spacing: 0.5px;
+.brand-logo .brand-image {
+  height: 48px;  /* ← Change this value to adjust logo size on Home page */
+  width: auto;
+  object-fit: contain;
 }
 
-.brand-name {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.02em;
+.brand-icon {
+  display: none;
+}
+
+.brand-full {
+  display: block;
 }
 
 /* Logout button */
@@ -202,14 +195,13 @@
     padding: 1.25rem 1.5rem;
   }
 
-  .brand-name {
-    font-size: 1.25rem;
+  .brand-full {
+    display: none;
   }
 
   .brand-icon {
-    width: 36px;
+    display: block;
     height: 36px;
-    font-size: 0.875rem;
   }
 
   .user-name {

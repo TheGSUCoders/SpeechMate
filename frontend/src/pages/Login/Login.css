@@ -35,26 +35,14 @@
   .brand {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    justify-content: center;
+    margin-bottom: 24px;
   }
   
-  .brand-mark {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    background: #f5f5ff;
-    color: #120730;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-  }
-  
-  .brand-text {
-    font-weight: 700;
-    color: var(--text);
-    font-size: 18px;
+  .brand-logo {
+    height: 70px;  /* ← Change this value to adjust logo size on Login page */
+    width: auto;
+    object-fit: contain;
   }
   
   .auth-header .eyebrow {

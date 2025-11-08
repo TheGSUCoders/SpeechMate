@@ -119,8 +119,18 @@ function Home() {
     <main className="home-wrapper">
       <nav className="nav-bar">
         <div className="brand-logo">
-          <span className="brand-icon">SM</span>
-          <span className="brand-name">SpeechMate</span>
+          <img 
+            src="/SpeechMateFull.png" 
+            alt="Speech Mate" 
+            className="brand-image brand-full" 
+            style={{ height: '60px' }}
+          />
+          <img 
+            src="/SpeechMateIcon.png" 
+            alt="Speech Mate" 
+            className="brand-image brand-icon" 
+            style={{ height: '40px' }}
+          />
         </div>
         
         <button className="logout-button" onClick={handleLogout}>
@@ -150,7 +160,7 @@ function Home() {
             initial="initial"
             animate={animationState}
           >
-            <h1 className="user-name">Welcome, {user?.name || 'User'}</h1>
+            <h1 className="user-name">Welcome, {user?.name?.split(' ')[0] || 'User'}</h1>
           </motion.div>
         </AnimatePresence>
 
