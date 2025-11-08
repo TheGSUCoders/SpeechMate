@@ -52,7 +52,7 @@ public class SecurityConfig {
                     String origin = request.getHeader("Origin");
                     String redirectUrl = (origin != null && ALLOWED_ORIGINS.contains(origin)) 
                         ? origin 
-                        : "http://localhost:5173";
+                        : "https://thespeechmate.tech";
                     response.sendRedirect(redirectUrl);
                 })
                 .permitAll()
@@ -85,7 +85,8 @@ public class SecurityConfig {
                 String referer = request.getHeader("Referer");
                 
                 // Determine redirect URL based on origin or referer
-                String redirectUrl = "http://localhost:5173";
+                // Default to production URL instead of localhost
+                String redirectUrl = "https://thespeechmate.tech";
                 
                 if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
                     redirectUrl = origin;
