@@ -1,23 +1,18 @@
 package hack.thegsucoders.speechmate.config;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,30 +33,29 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/error", "/webjars/**", "/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/", "/error", "/webjars/**", "/actuator/health", "/actuator/info", "/login/oauth2/code/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(authorization ->
-                    authorization.authorizationRequestResolver(customAuthorizationRequestResolver(clientRegistrationRepository))
+                    authorization.authorizationRequestResolver(
+                        customAuthorizationRequestResolver(clientRegistrationRepository)
+                    )
                 )
-                .successHandler(oAuth2AuthenticationSuccessHandler())
+                // Just redirect to /home - the frontend handles the rest
+                .defaultSuccessUrl("/home", true)
             )
             .logout(logout -> logout
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    String origin = request.getHeader("Origin");
-                    String redirectUrl = (origin != null && ALLOWED_ORIGINS.contains(origin)) 
-                        ? origin 
-                        : "https://thespeechmate.tech";
-                    response.sendRedirect(redirectUrl);
-                })
+                .logoutSuccessUrl("/")
                 .permitAll()
             );
 
         return http.build();
     }
 
-    private OAuth2AuthorizationRequestResolver customAuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+    private OAuth2AuthorizationRequestResolver customAuthorizationRequestResolver(
+            ClientRegistrationRepository clientRegistrationRepository) {
+        
         DefaultOAuth2AuthorizationRequestResolver defaultResolver =
             new DefaultOAuth2AuthorizationRequestResolver(
                 clientRegistrationRepository,
@@ -69,40 +63,13 @@ public class SecurityConfig {
             );
 
         defaultResolver.setAuthorizationRequestCustomizer(customizer ->
-            customizer.additionalParameters(params -> params.put("prompt", "select_account"))
+            customizer.additionalParameters(params -> {
+                params.put("prompt", "consent select_account");
+                params.put("access_type", "offline");
+            })
         );
 
         return defaultResolver;
-    }
-
-    @Bean
-    public SimpleUrlAuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler() {
-        return new SimpleUrlAuthenticationSuccessHandler() {
-            @Override
-            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                                Authentication authentication) throws IOException {
-                String origin = request.getHeader("Origin");
-                String referer = request.getHeader("Referer");
-                
-                // Determine redirect URL based on origin or referer
-                // Default to production URL instead of localhost
-                String redirectUrl = "https://thespeechmate.tech";
-                
-                if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
-                    redirectUrl = origin;
-                } else if (referer != null) {
-                    // Extract origin from referer
-                    for (String allowedOrigin : ALLOWED_ORIGINS) {
-                        if (referer.startsWith(allowedOrigin)) {
-                            redirectUrl = allowedOrigin;
-                            break;
-                        }
-                    }
-                }
-                
-                response.sendRedirect(redirectUrl);
-            }
-        };
     }
 
     @Bean
