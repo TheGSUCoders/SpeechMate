@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
+import UploadIcon from '../../components/icons/UploadIcon';
+import GenerateIcon from '../../components/icons/GenerateIcon';
 import './Home.css';
 
 type UserInfo = {
@@ -15,6 +18,8 @@ function Home() {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [animationState, setAnimationState] = useState('initial');
+  const [showButtons, setShowButtons] = useState(false);
 
   useEffect(() => {
     axios
@@ -22,6 +27,20 @@ function Home() {
       .then(({ data }) => {
         if (data?.authenticated) {
           setUser(data);
+          // Start the animation after user data is loaded
+          const animationTimer = setTimeout(() => {
+            setAnimationState('final');
+          }, 1000); // 1-second delay before animating
+
+          // Show buttons 2 seconds after the welcome animation starts
+          const buttonsTimer = setTimeout(() => {
+            setShowButtons(true);
+          }, 3000); // Welcome animation starts at 1s, buttons at 3s
+
+          return () => {
+            clearTimeout(animationTimer);
+            clearTimeout(buttonsTimer);
+          };
         } else {
           navigate('/', { replace: true });
         }
@@ -42,6 +61,20 @@ function Home() {
     } finally {
       navigate('/', { replace: true });
     }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('File uploaded:', file.name);
+      // Placeholder for file handling logic
+      alert(`You've selected ${file.name}. File handling coming soon!`);
+    }
+  };
+
+  const handleGenerateSpeech = () => {
+    // Placeholder for speech generation logic
+    alert('Speech generation and download feature coming soon!');
   };
 
   if (loading) {
@@ -72,10 +105,53 @@ function Home() {
       </nav>
 
       <div className="content-wrapper">
-        <div className="welcome-section">
-          <h1 className="user-name">Welcome, {user?.name || 'User'}</h1>
-          <p className="user-email">{user?.email}</p>
-        </div>
+        <AnimatePresence>
+          <motion.div
+            key="welcome"
+            className="welcome-section"
+            variants={{
+              initial: { y: 0, scale: 1, opacity: 1 },
+              final: { 
+                y: -window.innerHeight / 2 + 60, // Move to top
+                scale: 0.6, // Shrink
+                opacity: 1, // Remain visible
+                transition: { duration: 1.5, ease: "circOut", delay: 1 }
+              }
+            }}
+            initial="initial"
+            animate={animationState}
+          >
+            <h1 className="user-name">Welcome, {user?.name || 'User'}</h1>
+          </motion.div>
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showButtons && (
+            <motion.div
+              className="action-buttons"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <label htmlFor="file-upload" className="action-button">
+                <UploadIcon className="button-icon" />
+                <input 
+                  type="file" 
+                  id="file-upload" 
+                  accept=".pdf,.doc,.docx,.png" 
+                  style={{ display: 'none' }}
+                  onChange={handleFileUpload}
+                />
+                Upload Speech Material
+              </label>
+              <button className="action-button" onClick={handleGenerateSpeech}>
+                <GenerateIcon className="button-icon" />
+                Generate Speech from Scratch
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </main>
   );
