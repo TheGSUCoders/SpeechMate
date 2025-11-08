@@ -1,34 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
+function GoogleIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 48 48"
+      className="google-icon"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.652 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.156 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z"/>
+      <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.297 16.119 18.789 13 24 13c3.059 0 5.842 1.156 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+      <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.196l-6.191-5.235C29.2 35.091 26.719 36 24 36c-5.204 0-9.688-3.321-11.33-7.96l-6.536 5.038C9.441 39.556 16.162 44 24 44z"/>
+      <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.793 2.235-2.231 4.166-4.085 5.569.001-.001 6.191 5.235 6.191 5.235C40.331 35.53 44 30.177 44 24c0-1.341-.138-2.651-.389-3.917z"/>
+    </svg>
+  )
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const handleGoogleSignIn = () => {
+    alert('Google sign-in coming soon.');
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <main className="auth-wrapper">
+      <section className="auth-card" role="region" aria-label="Sign in">
+        <div className="brand">
+          <div className="brand-mark">SM</div>
+          <div className="brand-text">SpeechMate</div>
+        </div>
+
+        <header className="auth-header">
+          <p className="eyebrow">Please enter your details</p>
+          <h1 className="title">Welcome back</h1>
+          <p className="subtitle">Use your Google account to continue.</p>
+        </header>
+
+        <button className="google-button" onClick={handleGoogleSignIn} aria-label="Sign in with Google">
+          <GoogleIcon />
+          <span>Sign in with Google</span>
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+
+        <p className="helper">Other sign-in options coming soon.</p>
+        <p className="terms">
+          By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
         </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      </section>
+    </main>
   )
 }
 
