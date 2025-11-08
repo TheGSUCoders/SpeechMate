@@ -4,8 +4,11 @@ import hack.thegsucoders.speechmate.service.GeminiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/gemini")
@@ -24,5 +27,34 @@ public class GeminiController {
     public ResponseEntity<Map<String, Object>> getSpeechTips(@RequestParam(required = false) Integer count) {
         Map<String, Object> tips = geminiService.generateSpeechTips(count);
         return ResponseEntity.ok(tips);
+    }
+
+    /**
+     * Analyze uploaded speech materials (multimodal)
+     * Accepts: video (mp4, webm), slides (pptx, pdf), documents (docx, txt), images (jpg, png)
+     * @param files Uploaded files
+     * @param topic Speech topic (optional)
+     * @param audience Target audience (optional)
+     * @param duration Speech duration in seconds (optional)
+     * @param goals Speaker's improvement goals (optional)
+     * @return Comprehensive analysis with scores, feedback, and YouTube recommendations
+     */
+    @PostMapping(value = "/analyze-speech", consumes = "multipart/form-data")
+    public ResponseEntity<Map<String, Object>> analyzeSpeech(
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam(required = false) String topic,
+            @RequestParam(required = false) String audience,
+            @RequestParam(required = false) Integer duration,
+            @RequestParam(required = false) String goals
+    ) {
+        // Build context map
+        Map<String, Object> context = new HashMap<>();
+        if (topic != null) context.put("topic", topic);
+        if (audience != null) context.put("audience", audience);
+        if (duration != null) context.put("duration", duration);
+        if (goals != null) context.put("goals", goals);
+
+        Map<String, Object> analysis = geminiService.analyzeSpeechPerformance(files, context);
+        return ResponseEntity.ok(analysis);
     }
 }

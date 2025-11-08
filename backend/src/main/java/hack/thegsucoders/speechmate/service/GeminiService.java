@@ -4,10 +4,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Base64;
 
 @Service
 public class GeminiService {
@@ -124,7 +127,7 @@ public class GeminiService {
         }
     }
 
-    
+
     /**
      * Generate quick speech tips using Gemini 2.0 Flash-Lite (fastest, cheapest model)
      * Perfect for pre-generating on login and caching
@@ -178,6 +181,161 @@ public class GeminiService {
             return response;
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate speech tips: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Analyze uploaded speech materials (video, slides, documents, images) using Gemini 2.5 Pro
+     * Provides comprehensive feedback on delivery, content, and areas for improvement
+     * @param files List of uploaded files (video, ppt, pdf, images, etc.)
+     * @param context Optional context (topic, audience, duration, goals)
+     * @return Detailed analysis with scores, feedback, and YouTube recommendations
+     */
+    public Map<String, Object> analyzeSpeechPerformance(List<MultipartFile> files, Map<String, Object> context) {
+        try {
+            // Extract context information
+            String topic = (String) context.getOrDefault("topic", "unknown topic");
+            String audience = (String) context.getOrDefault("audience", "general audience");
+            Object durationObj = context.get("duration");
+            int durationSeconds = durationObj != null ? ((Number) durationObj).intValue() : 0;
+            String goals = (String) context.getOrDefault("goals", "improve public speaking skills");
+
+            // Build comprehensive analysis prompt
+            String prompt = String.format(
+                "You are an expert speech coach and communication analyst. Analyze the provided materials (video, slides, documents, images) " +
+                "for a speech/presentation with the following context:\n\n" +
+                "Topic: %s\n" +
+                "Target Audience: %s\n" +
+                "Duration: %d seconds\n" +
+                "Speaker's Goals: %s\n\n" +
+                "Perform a comprehensive analysis covering:\n\n" +
+                "1. **Content Analysis** (if video/audio provided):\n" +
+                "   - Topic adherence and focus (how well they stayed on topic)\n" +
+                "   - Logical flow and structure\n" +
+                "   - Clarity of main points\n" +
+                "   - Evidence and examples quality\n\n" +
+                "2. **Delivery Analysis** (if video provided):\n" +
+                "   - Vocal qualities (pace, volume, tone variation, energy)\n" +
+                "   - Filler words (um, uh, like, you know) - count and frequency\n" +
+                "   - Body language (posture, gestures, movement)\n" +
+                "   - Eye contact and facial expressions\n" +
+                "   - Confidence level and stage presence\n\n" +
+                "3. **Visual Aids Analysis** (if slides/documents provided):\n" +
+                "   - Slide design effectiveness\n" +
+                "   - Text-to-visual ratio\n" +
+                "   - Readability and clarity\n" +
+                "   - Alignment with verbal content\n\n" +
+                "4. **Timing & Pacing**:\n" +
+                "   - Speaking pace (words per minute if calculable)\n" +
+                "   - Use of pauses\n" +
+                "   - Time management\n\n" +
+                "Return analysis in this exact JSON structure:\n" +
+                "{\n" +
+                "  \"overall_score\": 0-100,\n" +
+                "  \"summary\": \"2-3 sentence overall assessment\",\n" +
+                "  \"scores\": {\n" +
+                "    \"content_quality\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
+                "    \"delivery\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
+                "    \"vocal_variety\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
+                "    \"body_language\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
+                "    \"visual_aids\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
+                "    \"engagement\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"}\n" +
+                "  },\n" +
+                "  \"strengths\": [\n" +
+                "    \"Specific strength with example\",\n" +
+                "    \"Another strength\"\n" +
+                "  ],\n" +
+                "  \"areas_for_improvement\": [\n" +
+                "    {\n" +
+                "      \"category\": \"Filler Words\",\n" +
+                "      \"issue\": \"Used 'um' 23 times (approximately once every 15 seconds)\",\n" +
+                "      \"impact\": \"Reduces credibility and distracts from message\",\n" +
+                "      \"suggestion\": \"Practice pausing instead of using filler words. Record yourself and count fillers to build awareness.\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"category\": \"Pacing\",\n" +
+                "      \"issue\": \"Speaking too quickly at ~180 words per minute\",\n" +
+                "      \"impact\": \"Audience may struggle to follow complex points\",\n" +
+                "      \"suggestion\": \"Slow down to 140-160 wpm. Use strategic pauses after key points.\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"detailed_feedback\": {\n" +
+                "    \"topic_adherence\": \"Detailed analysis of how well speaker stayed on topic, with specific examples\",\n" +
+                "    \"filler_words\": {\"count\": 23, \"frequency\": \"once per 15 seconds\", \"most_common\": [\"um\", \"uh\", \"like\"]},\n" +
+                "    \"body_language_notes\": \"Specific observations about posture, gestures, movement\",\n" +
+                "    \"vocal_analysis\": \"Notes on pace, volume, tone, energy levels\",\n" +
+                "    \"slide_feedback\": \"Specific feedback on visual aids if provided\"\n" +
+                "  },\n" +
+                "  \"youtube_resources\": [\n" +
+                "    {\n" +
+                "      \"area\": \"Eliminating Filler Words\",\n" +
+                "      \"search_query\": \"how to stop saying um and uh public speaking\",\n" +
+                "      \"recommended_channels\": [\"Charisma on Command\", \"Stanford Graduate School of Business\"],\n" +
+                "      \"why\": \"Your filler word usage is above average. These resources teach awareness and replacement techniques.\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"area\": \"Body Language\",\n" +
+                "      \"search_query\": \"confident body language for presentations\",\n" +
+                "      \"recommended_channels\": [\"TEDx Talks\", \"Communication Coach Alexander Lyon\"],\n" +
+                "      \"why\": \"To build more commanding stage presence and confident posture.\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"action_plan\": [\n" +
+                "    \"Priority 1: Focus on eliminating filler words through awareness and pausing\",\n" +
+                "    \"Priority 2: Slow down pacing to 140-160 words per minute\",\n" +
+                "    \"Priority 3: Improve body language with more purposeful gestures\"\n" +
+                "  ]\n" +
+                "}\n\n" +
+                "Be specific, constructive, and actionable. Provide exact counts/frequencies where possible. " +
+                "Tailor YouTube recommendations to the speaker's specific weaknesses. Return ONLY valid JSON.",
+                topic, audience, durationSeconds, goals
+            );
+
+            // Build multimodal content parts
+            List<Map<String, Object>> parts = new ArrayList<>();
+            
+            // Add the prompt as first part
+            parts.add(Map.of("text", prompt));
+
+            // Process each file and add to parts
+            for (MultipartFile file : files) {
+                String mimeType = file.getContentType();
+                byte[] fileBytes = file.getBytes();
+                String base64Data = Base64.getEncoder().encodeToString(fileBytes);
+
+                Map<String, Object> inlineData = new HashMap<>();
+                inlineData.put("mime_type", mimeType);
+                inlineData.put("data", base64Data);
+
+                parts.add(Map.of("inline_data", inlineData));
+            }
+
+            // Build request body
+            Map<String, Object> content = Map.of("parts", parts);
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("contents", List.of(content));
+
+            // Configuration for detailed analysis
+            Map<String, Object> generationConfig = new HashMap<>();
+            generationConfig.put("temperature", 0.4); // Lower temperature for more analytical/consistent output
+            generationConfig.put("topK", 40);
+            generationConfig.put("topP", 0.95);
+            generationConfig.put("maxOutputTokens", 8192); // Allow long detailed response
+            requestBody.put("generationConfig", generationConfig);
+
+            // Call Gemini 2.5 Pro (best for multimodal analysis)
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = (Map<String, Object>) webClient.post()
+                .uri("/v1beta/models/gemini-2.5-pro-002:generateContent?key=" + apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to analyze speech performance: " + e.getMessage(), e);
         }
     }
 }
