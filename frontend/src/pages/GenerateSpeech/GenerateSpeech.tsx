@@ -22,7 +22,7 @@ function GenerateSpeech() {
     alert(`Generating speech with: Topic - ${topic}, Tone - ${tone}, Style - ${speechStyle}, Audience - ${audience}, Key Message - ${keyMessage}, Duration - ${duration}s`);
     console.log({ topic, tone, speechStyle, audience, keyMessage, duration });
     // Navigate back home or to a results page
-    navigate('/home');
+    navigate('/home', { state: { skipAnimation: true } });
   };
 
   return (

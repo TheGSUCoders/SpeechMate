@@ -19,25 +19,23 @@ function Home() {
   const location = useLocation();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [animationState, setAnimationState] = useState('initial');
-  const [showButtons, setShowButtons] = useState(false);
-  const [shouldAnimate, setShouldAnimate] = useState(true);
-  const skipAnimation = Boolean((location.state as { skipAnimation?: boolean } | null)?.skipAnimation);
 
-  useEffect(() => {
+  // Check if animation should play on mount
+  const shouldAnimate = (() => {
+    const skipAnimation = Boolean((location.state as { skipAnimation?: boolean } | null)?.skipAnimation);
     const alreadyPlayed = typeof window !== 'undefined' && sessionStorage.getItem('homeAnimationPlayed') === 'true';
-    setShouldAnimate(!skipAnimation && !alreadyPlayed);
+    return !skipAnimation && !alreadyPlayed;
+  })();
 
-    if (skipAnimation && typeof window !== 'undefined') {
-      sessionStorage.setItem('homeAnimationPlayed', 'true');
-    }
-  }, [skipAnimation]);
+  const [animationState, setAnimationState] = useState(shouldAnimate ? 'initial' : 'final');
+  const [showButtons, setShowButtons] = useState(!shouldAnimate);
 
   useEffect(() => {
-    if (skipAnimation) {
+    // Clear navigation state after reading it
+    if (location.state) {
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [skipAnimation, navigate, location.pathname]);
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     axios
@@ -157,8 +155,8 @@ function Home() {
                 transition: { duration: 2, ease: "circOut", delay: 1 }
               }
             }}
-            initial="initial"
-            animate={animationState}
+            initial={shouldAnimate ? 'initial' : 'final'}
+            animate={shouldAnimate ? animationState : 'final'}
           >
             <h1 className="user-name">Welcome, {user?.name?.split(' ')[0] || 'User'}</h1>
           </motion.div>
