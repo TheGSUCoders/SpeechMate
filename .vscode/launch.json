@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SpeechmateApplication",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/backend",
+            "mainClass": "hack.thegsucoders.speechmate.SpeechmateApplication",
+            "projectName": "speechmate",
+            "args": "",
+            "envFile": "${workspaceFolder}/backend/.env"
+        }
+    ]
+}
