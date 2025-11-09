@@ -33,7 +33,7 @@ function FileUpload() {
     document.title = 'Speech Mate • Upload Files';
   }, []);
 
-  const allowedExtensions = ['.pdf', '.ppt', '.pptx', '.doc', '.docx', '.png', '.jpg', '.jpeg'];
+  const allowedExtensions = ['.pdf', '.ppt', '.pptx', '.png', '.jpg', '.jpeg'];
 
   const validateFile = (file: File): boolean => {
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -168,14 +168,14 @@ function FileUpload() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.ppt,.pptx,.doc,.docx,.png,.jpg,.jpeg"
+            accept=".pdf,.ppt,.pptx,.png,.jpg,.jpeg"
             onChange={handleFileInputChange}
             multiple
             style={{ display: 'none' }}
           />
 
           <div className="file-info">
-            <p>Supported formats: PDF, PowerPoint, Word, PNG, JPG</p>
+            <p>Supported formats: PDF, PowerPoint, PNG, JPG</p>
             <p>Maximum file size: 200MB per file</p>
           </div>
         </div>

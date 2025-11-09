@@ -36,8 +36,12 @@ public class GeminiController {
             @RequestParam(required = false) Integer duration,
             @RequestParam(required = false) String goals
     ) {
-        Map<String, Object> analysis = geminiService.analyzeSpeechPerformance(files, topic, audience, duration, goals);
-        return ResponseEntity.ok(analysis);
+        try {
+            Map<String, Object> analysis = geminiService.analyzeSpeechPerformance(files, topic, audience, duration, goals);
+            return ResponseEntity.ok(analysis);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/generate-encouragement")

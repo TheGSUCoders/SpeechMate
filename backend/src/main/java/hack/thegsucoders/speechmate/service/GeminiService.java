@@ -265,6 +265,23 @@ public class GeminiService {
             Integer duration, 
             String goals) {
         try {
+            // Validate file types - Gemini 2.5 Pro supports: audio, images, video, PDF
+            List<String> supportedMimeTypes = List.of(
+                "audio/", "image/", "video/", "application/pdf"
+            );
+            
+            for (MultipartFile file : files) {
+                String mimeType = file.getContentType();
+                if (mimeType == null || supportedMimeTypes.stream().noneMatch(mimeType::startsWith)) {
+                    throw new IllegalArgumentException(
+                        "Unsupported file type: " + mimeType + ". " +
+                        "Supported types: audio files (mp3, wav, etc.), images (jpg, png, etc.), " +
+                        "video files (mp4, webm, etc.), and PDF documents. " +
+                        "Word documents (.docx) are not supported - please convert to PDF first."
+                    );
+                }
+            }
+            
             // Set defaults for optional parameters
             String speechTopic = topic != null ? topic : "unknown topic";
             String targetAudience = audience != null ? audience : "general audience";
@@ -453,10 +470,15 @@ public class GeminiService {
             // Call Gemini 2.5 Pro (best for multimodal analysis)
             @SuppressWarnings("unchecked")
             Map<String, Object> response = (Map<String, Object>) webClient.post()
-                .uri("/v1beta/models/gemini-2.5-pro:generateContent?key=" + apiKey)
+                .uri("/v1/models/gemini-2.5-pro:generateContent?key=" + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
+                .onStatus(
+                    status -> status.is4xxClientError() || status.is5xxServerError(),
+                    clientResponse -> clientResponse.bodyToMono(String.class)
+                        .map(errorBody -> new RuntimeException("Gemini API error: " + errorBody))
+                )
                 .bodyToMono(Map.class)
                 .block();
 
