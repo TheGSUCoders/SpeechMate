@@ -23,30 +23,61 @@ interface YouTubeResource {
   why: string;
 }
 
+interface AccentAnalysis {
+  accent_type: string;
+  clarity: string;
+  notes: string;
+}
+
+interface IntonationAnalysis {
+  pattern: string;
+  pitch_variation: string;
+  emotional_inflection: string;
+  specific_examples: string;
+}
+
+interface SpecificStatementFeedback {
+  quote: string;
+  timestamp?: string;
+  effectiveness: string;
+  delivery_notes: string;
+  suggestion: string;
+}
+
 interface DetailedFeedback {
+  content_summary?: string;
   topic_adherence?: string;
   filler_words?: {
     count: number;
     frequency: string;
     most_common: string[];
+    context?: string;
   };
   body_language_notes?: string;
   vocal_analysis?: string;
+  intonation_details?: string;
   slide_feedback?: string;
+  language_notes?: string;
 }
 
 interface AnalysisData {
   overall_score: number;
   summary: string;
+  speech_content_summary?: string;
+  language_detected?: string;
+  accent_analysis?: AccentAnalysis;
+  intonation_analysis?: IntonationAnalysis;
   scores: {
     content_quality: Score;
     delivery: Score;
     vocal_variety: Score;
+    intonation?: Score;
     body_language: Score;
     visual_aids: Score;
     engagement: Score;
   };
   strengths: string[];
+  specific_statements_feedback?: SpecificStatementFeedback[];
   areas_for_improvement: ImprovementArea[];
   detailed_feedback: DetailedFeedback;
   youtube_resources: YouTubeResource[];
@@ -118,6 +149,51 @@ function SpeechAnalysis() {
           <p className="summary">{analysis.summary}</p>
         </div>
 
+        {analysis.speech_content_summary && (
+          <div className="content-summary-section">
+            <h2>📝 Speech Content Summary</h2>
+            <p className="content-summary">{analysis.speech_content_summary}</p>
+          </div>
+        )}
+
+        {(analysis.language_detected || analysis.accent_analysis) && (
+          <div className="language-section">
+            <h2>🌍 Language & Accent Analysis</h2>
+            {analysis.language_detected && (
+              <div className="language-info">
+                <p><strong>Language(s) Detected:</strong> {analysis.language_detected}</p>
+              </div>
+            )}
+            {analysis.accent_analysis && (
+              <div className="accent-info">
+                <p><strong>Accent Type:</strong> {analysis.accent_analysis.accent_type}</p>
+                <p><strong>Pronunciation Clarity:</strong> {analysis.accent_analysis.clarity}</p>
+                <p className="accent-notes">{analysis.accent_analysis.notes}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {analysis.intonation_analysis && (
+          <div className="intonation-section">
+            <h2>🎵 Intonation & Vocal Expression</h2>
+            <div className="intonation-grid">
+              <div className="intonation-item">
+                <strong>Pattern:</strong> {analysis.intonation_analysis.pattern}
+              </div>
+              <div className="intonation-item">
+                <strong>Pitch Variation:</strong> {analysis.intonation_analysis.pitch_variation}
+              </div>
+              <div className="intonation-item">
+                <strong>Emotional Inflection:</strong> {analysis.intonation_analysis.emotional_inflection}
+              </div>
+            </div>
+            {analysis.intonation_analysis.specific_examples && (
+              <p className="intonation-examples"><strong>Examples:</strong> {analysis.intonation_analysis.specific_examples}</p>
+            )}
+          </div>
+        )}
+
         <div className="scores-grid">
           {Object.entries(analysis.scores).map(([key, value]) => (
             <div key={key} className="score-card">
@@ -147,6 +223,25 @@ function SpeechAnalysis() {
             ))}
           </ul>
         </div>
+
+        {analysis.specific_statements_feedback && analysis.specific_statements_feedback.length > 0 && (
+          <div className="statements-section">
+            <h2>💬 Feedback on Your Specific Statements</h2>
+            {analysis.specific_statements_feedback.map((statement, index) => (
+              <div key={index} className="statement-card">
+                <div className="statement-quote">
+                  <p className="quote-text">"{statement.quote}"</p>
+                  {statement.timestamp && <span className="timestamp">{statement.timestamp}</span>}
+                </div>
+                <div className="statement-feedback">
+                  <p><strong>✅ What Worked:</strong> {statement.effectiveness}</p>
+                  <p><strong>🎭 Delivery:</strong> {statement.delivery_notes}</p>
+                  <p className="suggestion"><strong>💡 Suggestion:</strong> {statement.suggestion}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="improvements-section">
           <h2>📈 Areas for Improvement</h2>
@@ -179,6 +274,9 @@ function SpeechAnalysis() {
                 <span className="stat-value">{analysis.detailed_feedback.filler_words.most_common.join(', ')}</span>
               </div>
             </div>
+            {analysis.detailed_feedback.filler_words.context && (
+              <p className="filler-context"><strong>Context:</strong> {analysis.detailed_feedback.filler_words.context}</p>
+            )}
           </div>
         )}
 

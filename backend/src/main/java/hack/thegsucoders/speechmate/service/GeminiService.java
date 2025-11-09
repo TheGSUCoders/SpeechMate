@@ -209,48 +209,92 @@ public class GeminiService {
 
             // Build comprehensive analysis prompt
             String prompt = String.format(
-                "You are an expert speech coach and communication analyst. Analyze the provided materials (video, slides, documents, images) " +
-                "for a speech/presentation with the following context:\n\n" +
+                "You are an expert speech coach and communication analyst with expertise in linguistics, accent analysis, and cross-cultural communication. " +
+                "Analyze the provided materials (video, slides, documents, images) for a speech/presentation with the following context:\n\n" +
                 "Topic: %s\n" +
                 "Target Audience: %s\n" +
                 "Duration: %d seconds\n" +
                 "Speaker's Goals: %s\n\n" +
-                "Perform a comprehensive analysis covering:\n\n" +
-                "1. **Content Analysis** (if video/audio provided):\n" +
-                "   - Topic adherence and focus (how well they stayed on topic)\n" +
-                "   - Logical flow and structure\n" +
-                "   - Clarity of main points\n" +
-                "   - Evidence and examples quality\n\n" +
-                "2. **Delivery Analysis** (if video provided):\n" +
-                "   - Vocal qualities (pace, volume, tone variation, energy)\n" +
-                "   - Filler words (um, uh, like, you know) - count and frequency\n" +
-                "   - Body language (posture, gestures, movement)\n" +
-                "   - Eye contact and facial expressions\n" +
-                "   - Confidence level and stage presence\n\n" +
-                "3. **Visual Aids Analysis** (if slides/documents provided):\n" +
-                "   - Slide design effectiveness\n" +
-                "   - Text-to-visual ratio\n" +
-                "   - Readability and clarity\n" +
-                "   - Alignment with verbal content\n\n" +
-                "4. **Timing & Pacing**:\n" +
-                "   - Speaking pace (words per minute if calculable)\n" +
-                "   - Use of pauses\n" +
-                "   - Time management\n\n" +
+                "Perform a comprehensive and detailed analysis covering:\n\n" +
+                "1. **Speech Content & Message Analysis**:\n" +
+                "   - Provide a detailed summary of what the speech was about - capture the main theme, key arguments, and central message\n" +
+                "   - Identify and quote 3-5 specific statements or phrases the speaker used (use actual quotes from the video)\n" +
+                "   - Analyze how well they stayed on topic and maintained focus\n" +
+                "   - Evaluate the logical flow, structure, and organization of ideas\n" +
+                "   - Assess the quality and relevance of evidence, examples, and supporting details\n" +
+                "   - Comment on the opening and closing effectiveness\n\n" +
+                "2. **Language & Accent Analysis**:\n" +
+                "   - Identify the primary language(s) spoken (e.g., English, Spanish, French, code-switching)\n" +
+                "   - If speaking in a non-native or different language, note this explicitly\n" +
+                "   - Detect and describe the speaker's accent (e.g., American Southern, British RP, Indian English, Spanish accent in English, native accent)\n" +
+                "   - Analyze pronunciation clarity and any pronunciation challenges\n" +
+                "   - Comment on vocabulary richness and appropriateness for the audience\n\n" +
+                "3. **Intonation & Vocal Analysis**:\n" +
+                "   - Analyze intonation patterns (rising, falling, flat, varied)\n" +
+                "   - Evaluate pitch variation and monotone vs. dynamic delivery\n" +
+                "   - Assess vocal qualities: pace, volume, tone, energy, enthusiasm\n" +
+                "   - Identify emotional inflection and emphasis on key points\n" +
+                "   - Note any vocal strengths or weaknesses (e.g., 'rising intonation made questions engaging', 'flat tone during key statistics')\n\n" +
+                "4. **Filler Words & Speech Patterns**:\n" +
+                "   - Count and list filler words with frequency (um, uh, like, you know, so, actually, etc.)\n" +
+                "   - Identify any repeated phrases or verbal tics\n" +
+                "   - Note where in the speech fillers appeared most frequently\n\n" +
+                "5. **Delivery & Non-Verbal Communication** (if video provided):\n" +
+                "   - Body language: posture, gestures, movement, use of space\n" +
+                "   - Eye contact patterns and engagement with audience/camera\n" +
+                "   - Facial expressions and emotional authenticity\n" +
+                "   - Confidence level, nervousness indicators, stage presence\n" +
+                "   - Hand gestures: purposeful vs. distracting\n\n" +
+                "6. **Visual Aids Analysis** (if slides/documents provided):\n" +
+                "   - Slide design effectiveness and professional appearance\n" +
+                "   - Text-to-visual ratio and readability\n" +
+                "   - Alignment with verbal content and timing\n\n" +
+                "7. **Timing & Pacing**:\n" +
+                "   - Speaking pace (estimate words per minute)\n" +
+                "   - Strategic use of pauses and silence\n" +
+                "   - Time management and pacing throughout speech\n\n" +
+                "8. **Specific Statement Feedback**:\n" +
+                "   - Quote at least 3-5 specific statements from the speech\n" +
+                "   - For each statement, provide feedback on: effectiveness, impact, delivery quality, and suggestions for improvement\n" +
+                "   - Example: 'When you said \"[exact quote]\", this was effective because... However, consider...'\n\n" +
                 "Return analysis in this exact JSON structure:\n" +
                 "{\n" +
                 "  \"overall_score\": 0-100,\n" +
                 "  \"summary\": \"2-3 sentence overall assessment\",\n" +
+                "  \"speech_content_summary\": \"Detailed 3-4 sentence summary of what the speech was actually about, including main theme and key points discussed\",\n" +
+                "  \"language_detected\": \"Primary language(s) spoken (e.g., 'English', 'Spanish', 'English with Spanish code-switching')\",\n" +
+                "  \"accent_analysis\": {\n" +
+                "    \"accent_type\": \"Specific accent description (e.g., 'American Southern', 'British RP', 'Indian English', 'Native Spanish accent when speaking English', 'Standard American')\",\n" +
+                "    \"clarity\": \"Assessment of pronunciation clarity\",\n" +
+                "    \"notes\": \"Detailed notes on accent impact and any pronunciation strengths or challenges\"\n" +
+                "  },\n" +
+                "  \"intonation_analysis\": {\n" +
+                "    \"pattern\": \"Overall intonation pattern (e.g., 'varied and dynamic', 'mostly flat', 'rising at sentence ends')\",\n" +
+                "    \"pitch_variation\": \"High/Medium/Low pitch variation\",\n" +
+                "    \"emotional_inflection\": \"Quality of emotional expression through tone\",\n" +
+                "    \"specific_examples\": \"Examples of strong or weak intonation moments with timestamps if possible\"\n" +
+                "  },\n" +
                 "  \"scores\": {\n" +
                 "    \"content_quality\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
                 "    \"delivery\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
                 "    \"vocal_variety\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
+                "    \"intonation\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
                 "    \"body_language\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
                 "    \"visual_aids\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"},\n" +
                 "    \"engagement\": {\"score\": 0-100, \"label\": \"Excellent/Good/Fair/Needs Work\"}\n" +
                 "  },\n" +
                 "  \"strengths\": [\n" +
-                "    \"Specific strength with example\",\n" +
-                "    \"Another strength\"\n" +
+                "    \"Specific strength with example from the speech\",\n" +
+                "    \"Another strength with concrete evidence\"\n" +
+                "  ],\n" +
+                "  \"specific_statements_feedback\": [\n" +
+                "    {\n" +
+                "      \"quote\": \"Exact quote from the speaker\",\n" +
+                "      \"timestamp\": \"Approximate time in speech (if determinable)\",\n" +
+                "      \"effectiveness\": \"What worked well about this statement\",\n" +
+                "      \"delivery_notes\": \"How it was delivered (tone, emphasis, body language)\",\n" +
+                "      \"suggestion\": \"How this statement could be improved or built upon\"\n" +
+                "    }\n" +
                 "  ],\n" +
                 "  \"areas_for_improvement\": [\n" +
                 "    {\n" +
@@ -267,11 +311,14 @@ public class GeminiService {
                 "    }\n" +
                 "  ],\n" +
                 "  \"detailed_feedback\": {\n" +
+                "    \"content_summary\": \"What the speech was about - main theme, arguments, and message in detail\",\n" +
                 "    \"topic_adherence\": \"Detailed analysis of how well speaker stayed on topic, with specific examples\",\n" +
-                "    \"filler_words\": {\"count\": 23, \"frequency\": \"once per 15 seconds\", \"most_common\": [\"um\", \"uh\", \"like\"]},\n" +
-                "    \"body_language_notes\": \"Specific observations about posture, gestures, movement\",\n" +
-                "    \"vocal_analysis\": \"Notes on pace, volume, tone, energy levels\",\n" +
-                "    \"slide_feedback\": \"Specific feedback on visual aids if provided\"\n" +
+                "    \"filler_words\": {\"count\": 23, \"frequency\": \"once per 15 seconds\", \"most_common\": [\"um\", \"uh\", \"like\"], \"context\": \"Where fillers appeared most (e.g., during transitions, technical explanations)\"},\n" +
+                "    \"vocal_analysis\": \"Detailed notes on pace (estimate WPM), volume, tone, energy levels, and vocal strengths/weaknesses\",\n" +
+                "    \"intonation_details\": \"Specific analysis of pitch patterns, emphasis, emotional expression through voice\",\n" +
+                "    \"body_language_notes\": \"Specific observations about posture, gestures, movement, eye contact\",\n" +
+                "    \"slide_feedback\": \"Specific feedback on visual aids if provided\",\n" +
+                "    \"language_notes\": \"Notes on language use, vocabulary level, any non-native language observations\"\n" +
                 "  },\n" +
                 "  \"youtube_resources\": [\n" +
                 "    {\n" +
@@ -293,8 +340,17 @@ public class GeminiService {
                 "    \"Priority 3: Improve body language with more purposeful gestures\"\n" +
                 "  ]\n" +
                 "}\n\n" +
-                "Be specific, constructive, and actionable. Provide exact counts/frequencies where possible. " +
-                "Tailor YouTube recommendations to the speaker's specific weaknesses. Return ONLY valid JSON.",
+                "IMPORTANT INSTRUCTIONS:\n" +
+                "- Be HIGHLY SPECIFIC about what the speech was actually about - don't just say 'the topic', describe the actual content and arguments\n" +
+                "- ALWAYS include at least 3-5 direct quotes from the speaker with detailed feedback on each\n" +
+                "- MUST identify the language(s) spoken and provide detailed accent analysis\n" +
+                "- MUST provide comprehensive intonation analysis with specific examples\n" +
+                "- If the speaker uses a different language or has a non-native accent, explicitly note this with supportive details\n" +
+                "- Provide exact counts and frequencies for filler words, not just estimates\n" +
+                "- Reference specific moments, statements, or sections of the speech in your feedback\n" +
+                "- Be constructive and actionable - every criticism should include a specific suggestion\n" +
+                "- Tailor YouTube recommendations to address the speaker's most critical weaknesses\n" +
+                "- Return ONLY valid JSON with no additional text or markdown formatting.",
                 speechTopic, targetAudience, durationSeconds, speakerGoals
             );
 
