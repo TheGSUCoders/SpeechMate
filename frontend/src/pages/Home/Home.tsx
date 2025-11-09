@@ -178,13 +178,23 @@ function Home() {
                 exit={{ opacity: 0, y: -20, position: 'absolute' }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               >
-                <label htmlFor="file-upload" className="action-button" onClick={handleUploadClick}>
-                  <UploadIcon className="button-icon" />
-                  Upload Speech Material
-                </label>
+                <button className="action-button" onClick={handleUploadClick}>
+                  <div className="button-icon-wrapper">
+                    <UploadIcon className="button-icon" />
+                  </div>
+                  <div className="button-content">
+                    <h3 className="button-title">Upload Speech Material</h3>
+                    <p className="button-description">Upload your slides, notes, and documents to practice with existing content.</p>
+                  </div>
+                </button>
                 <button className="action-button" onClick={handleGenerateSpeech}>
-                  <GenerateIcon className="button-icon" />
-                  Generate Speech from Scratch
+                  <div className="button-icon-wrapper">
+                    <GenerateIcon className="button-icon" />
+                  </div>
+                  <div className="button-content">
+                    <h3 className="button-title">Generate Speech from Scratch</h3>
+                    <p className="button-description">Create a custom speech outline with AI assistance tailored to your topic and audience.</p>
+                  </div>
                 </button>
               </motion.div>
             )}
