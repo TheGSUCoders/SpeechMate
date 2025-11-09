@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CloudUploadIcon from '../../components/icons/CloudUploadIcon';
@@ -27,6 +27,11 @@ function FileUpload() {
     }] : []
   );
   const [error, setError] = useState<string | null>(null);
+
+  // Update page title
+  useEffect(() => {
+    document.title = 'Speech Mate • Upload Files';
+  }, []);
 
   const allowedExtensions = ['.pdf', '.ppt', '.pptx', '.doc', '.docx', '.png', '.jpg', '.jpeg'];
 

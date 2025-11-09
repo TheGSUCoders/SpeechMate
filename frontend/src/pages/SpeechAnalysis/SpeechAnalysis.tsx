@@ -89,6 +89,11 @@ function SpeechAnalysis() {
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
 
+  // Update page title
+  useEffect(() => {
+    document.title = 'Speech Mate • Analysis Results';
+  }, []);
+
   useEffect(() => {
     const state = location.state as { analysis?: Record<string, unknown> };
     if (!state?.analysis) {

@@ -17,6 +17,11 @@ function Login() {
   const navigate = useNavigate();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
+  // Update page title
+  useEffect(() => {
+    document.title = 'Speech Mate • Sign In';
+  }, []);
+
   useEffect(() => {
     axios
       .get<UserInfo>(`${API_BASE_URL}/api/user`, { withCredentials: true })

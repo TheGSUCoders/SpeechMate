@@ -30,6 +30,11 @@ function Home() {
   const [animationState, setAnimationState] = useState(shouldAnimate ? 'initial' : 'final');
   const [showButtons, setShowButtons] = useState(!shouldAnimate);
 
+  // Update page title
+  useEffect(() => {
+    document.title = 'Speech Mate • Home';
+  }, []);
+
   useEffect(() => {
     // Clear navigation state after reading it
     if (location.state) {

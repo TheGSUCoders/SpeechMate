@@ -36,6 +36,11 @@ function VideoRecording() {
 
   const MAX_RECORDING_TIME = 5 * 60; // 5 minutes in seconds
 
+  // Update page title
+  useEffect(() => {
+    document.title = 'Speech Mate • Record Video';
+  }, []);
+
   useEffect(() => {
     return () => {
       if (stream) {
@@ -256,7 +261,7 @@ function VideoRecording() {
 
   return (
     <>
-      {isSubmitting && <LoadingSpinner />}
+      {isSubmitting && <LoadingSpinner message="Analyzing your speech performance..." />}
       <div className="video-recording-wrapper">
       <motion.div
         className="video-recording-container"

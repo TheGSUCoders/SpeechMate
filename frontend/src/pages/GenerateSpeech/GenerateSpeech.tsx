@@ -27,6 +27,11 @@ function GenerateSpeech() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Update page title
+  useEffect(() => {
+    document.title = 'Speech Mate • Generate Speech';
+  }, []);
+
   useEffect(() => {
     if (uploadedFile) {
       // Pre-fill topic with file name (without extension)
@@ -94,7 +99,7 @@ function GenerateSpeech() {
 
   return (
     <>
-      {loading && <LoadingSpinner />}
+      {loading && <LoadingSpinner message="Generating your speech outline..." />}
       <main className="generate-speech-wrapper">
         <motion.div
           className="generate-speech-container"

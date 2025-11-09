@@ -54,6 +54,11 @@ function SpeechResult() {
   const [speechOutline, setSpeechOutline] = useState<SpeechOutline | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Update page title
+  useEffect(() => {
+    document.title = 'Speech Mate • Speech Outline';
+  }, []);
+
   useEffect(() => {
     if (!state?.outline) {
       navigate('/home', { state: { skipAnimation: true } });
