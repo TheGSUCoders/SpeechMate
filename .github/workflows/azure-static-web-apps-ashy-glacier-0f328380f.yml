@@ -46,7 +46,7 @@ jobs:
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
         env:
-          VITE_API_BASE_URL: https://speechmate-backend-hngqcsf9d5hadhf0.eastus-01.azurewebsites.net
+          VITE_API_BASE_URL: https://api.thespeechmate.tech
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
