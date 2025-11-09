@@ -26,6 +26,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex: 1;
 }
 
 .brand-logo .brand-image {
@@ -40,6 +41,22 @@
 
 .brand-full {
   display: block;
+}
+
+/* User greeting in center */
+.user-greeting {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.01em;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, #e0d4ff 50%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Logout button */
@@ -83,32 +100,60 @@
   justify-content: center;
   padding: 2rem;
   font-family: 'Roboto', sans-serif;
+  position: relative;
 }
 
-.welcome-section {
+.home-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(123, 78, 199, 0.25), transparent 45%),
+    radial-gradient(circle at 70% 70%, rgba(76, 35, 149, 0.18), transparent 40%),
+    rgba(3, 0, 12, 0.94);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.home-overlay.stage-welcome {
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1), transparent 55%),
+    rgba(6, 0, 20, 0.92);
+}
+
+.overlay-logo img {
+  width: 280px;
+  height: 280px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 35px rgba(0, 0, 0, 0.45));
+}
+
+.overlay-welcome {
   text-align: center;
-  max-width: 800px;
-  /* Add this to allow the element to be positioned */
-  position: absolute; 
+  max-width: 640px;
+  padding: 0 1.5rem;
 }
 
 .user-name {
-  font-size: 4.5rem;
+  font-size: 4rem;
   font-weight: 700;
-  margin: 0 0 1rem 0;
+  margin: 0;
   background: linear-gradient(135deg, #ffffff 0%, #e0d4ff 50%, #c4b5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
-.user-email {
-  font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0;
-  font-weight: 400;
+.home-wrapper.overlay-active .nav-bar,
+.home-wrapper.overlay-active .content-wrapper {
+  filter: blur(4px);
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 /* Action Buttons */
@@ -242,6 +287,15 @@
   .brand-icon {
     display: block;
     height: 36px;
+  }
+
+  .user-greeting {
+    position: static;
+    transform: none;
+    font-size: 1.125rem;
+    margin: 0 auto;
+    flex: 1;
+    text-align: center;
   }
 
   .user-name {

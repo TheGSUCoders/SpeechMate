@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 import ArrowLeftIcon from '../../components/icons/ArrowLeftIcon';
 import './SpeechAnalysis.css';
 
@@ -84,19 +86,106 @@ interface AnalysisData {
   action_plan: string[];
 }
 
+const SectionTitle = ({ icon, title }: { icon: ReactNode; title: string }) => (
+  <div className="section-heading">
+    <span className="section-heading__icon">{icon}</span>
+    <h2>{title}</h2>
+  </div>
+);
+
+const SummaryIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 3h8l5 5v13H7z" />
+    <path d="M15 3v5h5" />
+    <line x1="9" y1="13" x2="15" y2="13" />
+    <line x1="9" y1="17" x2="15" y2="17" />
+  </svg>
+);
+
+const LanguageIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3c2.7 3 2.7 15 0 18" />
+    <path d="M12 3c-2.7 3-2.7 15 0 18" />
+  </svg>
+);
+
+const IntonationIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 16c1.5-4 3.5-4 5 0s3.5 4 5 0 3.5-4 5 0 3.5 4 5 0" />
+  </svg>
+);
+
+const StrengthIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.5-4.8-2.5-4.8 2.5.9-5.5L4.2 8.7l5.4-.8z" />
+  </svg>
+);
+
+const StatementIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 7H4v6h4v4H2V9a2 2 0 0 1 2-2h3z" />
+    <path d="M20 7h-3v6h4v4h-6V9a2 2 0 0 1 2-2h3z" />
+  </svg>
+);
+
+const ImprovementIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="4" />
+    <line x1="12" y1="7" x2="12" y2="9" />
+    <line x1="12" y1="15" x2="12" y2="17" />
+    <line x1="7" y1="12" x2="9" y2="12" />
+    <line x1="15" y1="12" x2="17" y2="12" />
+  </svg>
+);
+
+const FillerIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="6" y1="20" x2="6" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="18" y1="20" x2="18" y2="14" />
+  </svg>
+);
+
+const ResourceIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <polygon points="10 9 15 12 10 15 10 9" />
+  </svg>
+);
+
+const ActionIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 11l2 2 4-5" />
+    <path d="M5 5h14" />
+    <path d="M5 19h14" />
+    <path d="M5 12h3" />
+    <path d="M5 16h3" />
+  </svg>
+);
+
 function SpeechAnalysis() {
   const location = useLocation();
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
   // Update page title
   useEffect(() => {
-    document.title = 'Speech Mate • Analysis Results';
+    document.title = 'Speech Mate - Analysis Results';
   }, []);
 
   useEffect(() => {
     const state = location.state as { analysis?: Record<string, unknown> };
+    console.log('SpeechAnalysis - Full state:', state);
+    console.log('SpeechAnalysis - Analysis data:', state?.analysis);
+    
     if (!state?.analysis) {
+      console.error('No analysis data found in location state');
       navigate('/home', { state: { skipAnimation: true } });
       return;
     }
@@ -104,26 +193,99 @@ function SpeechAnalysis() {
     // Parse the Gemini API response
     try {
       const analysisData = state.analysis as Record<string, unknown>;
+      console.log('Analysis data keys:', Object.keys(analysisData));
+      
       const candidates = analysisData.candidates as Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      console.log('Candidates:', candidates);
+      
       if (candidates && candidates.length > 0) {
         const content = candidates[0].content;
+        console.log('Content:', content);
+        
         if (content && content.parts && content.parts.length > 0) {
           const responseText = content.parts[0].text;
+          console.log('Response text:', responseText);
+          
           if (responseText) {
             const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            console.log('JSON match found:', !!jsonMatch);
+            
             if (jsonMatch) {
+              console.log('Parsing JSON:', jsonMatch[0].substring(0, 200) + '...');
               const parsed = JSON.parse(jsonMatch[0]) as AnalysisData;
+              console.log('Parsed analysis:', parsed);
               setAnalysis(parsed);
+              
+              // Play the feedback summary using ElevenLabs
+              playFeedbackAudio(parsed.summary);
+            } else {
+              console.error('No JSON found in response text');
+              alert('Invalid response format. Please try again.');
+              navigate('/home', { state: { skipAnimation: true } });
             }
           }
         }
+      } else {
+        console.error('No candidates found in analysis data');
+        alert('Invalid analysis response. Please try again.');
+        navigate('/home', { state: { skipAnimation: true } });
       }
     } catch (err) {
       console.error('Failed to parse analysis:', err);
+      console.error('Error details:', err instanceof Error ? err.message : String(err));
       alert('Failed to parse speech analysis. Please try again.');
       navigate('/home', { state: { skipAnimation: true } });
     }
   }, [location, navigate]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.src = '';
+      }
+    };
+  }, [currentAudio]);
+
+  const playFeedbackAudio = async (text: string) => {
+    if (isMuted) return;
+    
+    setIsPlayingAudio(true);
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+      const response = await axios.post(`${API_BASE_URL}/api/elevenlabs/text-to-speech`, {
+        text: text
+      }, {
+        withCredentials: true,
+        responseType: 'blob',
+        timeout: 10000 // 10 second timeout
+      });
+      
+      const audioUrl = URL.createObjectURL(response.data);
+      const audio = new Audio(audioUrl);
+      setCurrentAudio(audio);
+      
+      audio.onended = () => {
+        setIsPlayingAudio(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      await audio.play();
+    } catch (err) {
+      console.error('Failed to play feedback audio:', err);
+      setIsPlayingAudio(false);
+      // Silently fail - don't interrupt the user experience
+    }
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (currentAudio && !isMuted) {
+      currentAudio.pause();
+      setIsPlayingAudio(false);
+    }
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return '#4CAF50';
@@ -144,6 +306,25 @@ function SpeechAnalysis() {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <div className="analysis-header">
+          <button 
+            className={`mute-button ${isPlayingAudio ? 'playing' : ''}`}
+            onClick={toggleMute}
+            title={isMuted ? "Unmute feedback" : "Mute feedback"}
+          >
+            {isMuted ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                <line x1="23" y1="9" x2="17" y2="15"/>
+                <line x1="17" y1="9" x2="23" y2="15"/>
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              </svg>
+            )}
+          </button>
           <h1>Speech Performance Analysis</h1>
           <div className="overall-score" style={{ borderColor: getScoreColor(analysis.overall_score) }}>
             <div className="score-circle" style={{ background: `conic-gradient(${getScoreColor(analysis.overall_score)} ${analysis.overall_score * 3.6}deg, rgba(255,255,255,0.1) 0deg)` }}>
@@ -155,15 +336,15 @@ function SpeechAnalysis() {
         </div>
 
         {analysis.speech_content_summary && (
-          <div className="content-summary-section">
-            <h2>📝 Speech Content Summary</h2>
+          <div className="content-summary-section analysis-card">
+            <SectionTitle icon={<SummaryIcon />} title="Speech Content Summary" />
             <p className="content-summary">{analysis.speech_content_summary}</p>
           </div>
         )}
 
         {(analysis.language_detected || analysis.accent_analysis) && (
-          <div className="language-section">
-            <h2>🌍 Language & Accent Analysis</h2>
+          <div className="language-section analysis-card">
+            <SectionTitle icon={<LanguageIcon />} title="Language & Accent Analysis" />
             {analysis.language_detected && (
               <div className="language-info">
                 <p><strong>Language(s) Detected:</strong> {analysis.language_detected}</p>
@@ -180,8 +361,8 @@ function SpeechAnalysis() {
         )}
 
         {analysis.intonation_analysis && (
-          <div className="intonation-section">
-            <h2>🎵 Intonation & Vocal Expression</h2>
+          <div className="intonation-section analysis-card">
+            <SectionTitle icon={<IntonationIcon />} title="Intonation & Vocal Expression" />
             <div className="intonation-grid">
               <div className="intonation-item">
                 <strong>Pattern:</strong> {analysis.intonation_analysis.pattern}
@@ -220,8 +401,8 @@ function SpeechAnalysis() {
           ))}
         </div>
 
-        <div className="strengths-section">
-          <h2>💪 Your Strengths</h2>
+        <div className="strengths-section analysis-card">
+          <SectionTitle icon={<StrengthIcon />} title="Your Strengths" />
           <ul className="strengths-list">
             {analysis.strengths.map((strength, index) => (
               <li key={index}>{strength}</li>
@@ -230,8 +411,8 @@ function SpeechAnalysis() {
         </div>
 
         {analysis.specific_statements_feedback && analysis.specific_statements_feedback.length > 0 && (
-          <div className="statements-section">
-            <h2>💬 Feedback on Your Specific Statements</h2>
+          <div className="statements-section analysis-card">
+            <SectionTitle icon={<StatementIcon />} title="Feedback on Your Specific Statements" />
             {analysis.specific_statements_feedback.map((statement, index) => (
               <div key={index} className="statement-card">
                 <div className="statement-quote">
@@ -239,32 +420,32 @@ function SpeechAnalysis() {
                   {statement.timestamp && <span className="timestamp">{statement.timestamp}</span>}
                 </div>
                 <div className="statement-feedback">
-                  <p><strong>✅ What Worked:</strong> {statement.effectiveness}</p>
-                  <p><strong>🎭 Delivery:</strong> {statement.delivery_notes}</p>
-                  <p className="suggestion"><strong>💡 Suggestion:</strong> {statement.suggestion}</p>
+                  <p><strong>What Worked:</strong> {statement.effectiveness}</p>
+                  <p><strong>Delivery:</strong> {statement.delivery_notes}</p>
+                  <p className="suggestion"><strong>Recommendation:</strong> {statement.suggestion}</p>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <div className="improvements-section">
-          <h2>📈 Areas for Improvement</h2>
+        <div className="improvements-section analysis-card">
+          <SectionTitle icon={<ImprovementIcon />} title="Areas for Improvement" />
           {analysis.areas_for_improvement.map((area, index) => (
             <div key={index} className="improvement-card">
               <h3>{area.category}</h3>
               <div className="improvement-detail">
                 <p><strong>Issue:</strong> {area.issue}</p>
                 <p><strong>Impact:</strong> {area.impact}</p>
-                <p className="suggestion"><strong>💡 Suggestion:</strong> {area.suggestion}</p>
+                <p className="suggestion"><strong>Recommendation:</strong> {area.suggestion}</p>
               </div>
             </div>
           ))}
         </div>
 
         {analysis.detailed_feedback.filler_words && (
-          <div className="filler-words-section">
-            <h2>🗣️ Filler Words Analysis</h2>
+          <div className="filler-words-section analysis-card">
+            <SectionTitle icon={<FillerIcon />} title="Filler Words Analysis" />
             <div className="filler-stats">
               <div className="stat">
                 <span className="stat-number">{analysis.detailed_feedback.filler_words.count}</span>
@@ -285,8 +466,8 @@ function SpeechAnalysis() {
           </div>
         )}
 
-        <div className="resources-section">
-          <h2>📺 Recommended YouTube Resources</h2>
+        <div className="resources-section analysis-card">
+          <SectionTitle icon={<ResourceIcon />} title="Recommended YouTube Resources" />
           {analysis.youtube_resources.map((resource, index) => (
             <div key={index} className="resource-card">
               <h3>{resource.area}</h3>
@@ -299,8 +480,8 @@ function SpeechAnalysis() {
           ))}
         </div>
 
-        <div className="action-plan-section">
-          <h2>✅ Action Plan</h2>
+        <div className="action-plan-section analysis-card">
+          <SectionTitle icon={<ActionIcon />} title="Action Plan" />
           <ol className="action-plan-list">
             {analysis.action_plan.map((action, index) => (
               <li key={index}>{action}</li>

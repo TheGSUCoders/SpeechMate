@@ -185,6 +185,70 @@ public class GeminiService {
     }
 
     /**
+     * Generate a short encouraging message for the user before recording
+     * Uses Gemini 2.0 Flash-Lite for fastest response
+     * @param userName User's first name
+     * @return Encouraging message
+     */
+    public String generateEncouragement(String userName) {
+        String name = userName != null && !userName.isEmpty() ? userName : "there";
+        
+        String prompt = String.format(
+            "Generate a very short (5-8 words maximum), encouraging message for %s who is about to record their speech. " +
+            "Be positive, warm, and motivating. Examples: 'You got this, %s!', 'Good luck, %s! You'll do great!', 'Shine bright, %s!'. " +
+            "Return ONLY the encouragement message, nothing else.",
+            name, name, name, name
+        );
+        
+        // Build request body
+        Map<String, Object> textPart = Map.of("text", prompt);
+        Map<String, Object> content = Map.of("parts", List.of(textPart));
+        
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("contents", List.of(content));
+        
+        // Fast generation config
+        Map<String, Object> generationConfig = new HashMap<>();
+        generationConfig.put("temperature", 0.9);
+        generationConfig.put("maxOutputTokens", 32);
+        requestBody.put("generationConfig", generationConfig);
+        
+        try {
+            // Call Gemini 2.0 Flash-Lite for fastest response
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = (Map<String, Object>) webClient.post()
+                .uri("/v1beta/models/gemini-2.0-flash-lite:generateContent?key=" + apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+            
+            // Extract text from response
+            if (response != null && response.containsKey("candidates")) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
+                if (!candidates.isEmpty()) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> candidate = candidates.get(0);
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> contentMap = (Map<String, Object>) candidate.get("content");
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> parts = (List<Map<String, Object>>) contentMap.get("parts");
+                    if (!parts.isEmpty()) {
+                        return (String) parts.get(0).get("text");
+                    }
+                }
+            }
+            
+            return "You got this, " + name + "!";
+        } catch (Exception e) {
+            System.err.println("Failed to generate encouragement: " + e.getMessage());
+            return "You got this, " + name + "!";
+        }
+    }
+
+    /**
      * Analyze uploaded speech materials (video, slides, documents, images) using Gemini 2.5 Pro
      * Provides comprehensive feedback on delivery, content, and areas for improvement
      * @param files List of uploaded files (video, ppt, pdf, images, etc.)

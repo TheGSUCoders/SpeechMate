@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { readEncouragementCache } from '../../utils/audioCache';
+import { fetchAndCacheEncouragement } from '../../utils/encouragement';
 import './VideoRecording.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
@@ -22,6 +24,7 @@ function VideoRecording() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const encouragementAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -33,8 +36,61 @@ function VideoRecording() {
   const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [encouragementMessage, setEncouragementMessage] = useState<string>('');
+  const [showEncouragement, setShowEncouragement] = useState(false);
 
   const MAX_RECORDING_TIME = 5 * 60; // 5 minutes in seconds
+
+  const playEncouragementAudio = (audioDataUrl: string | null) => {
+    if (!audioDataUrl) return;
+    if (encouragementAudioRef.current) {
+      encouragementAudioRef.current.pause();
+      encouragementAudioRef.current = null;
+    }
+    const audio = new Audio(audioDataUrl);
+    audio.preload = 'auto';
+    audio.volume = 0.85;
+    encouragementAudioRef.current = audio;
+    audio.play().catch(err => console.error('Failed to play encouragement audio', err));
+  };
+
+  const stopEncouragementAudio = () => {
+    if (encouragementAudioRef.current) {
+      encouragementAudioRef.current.pause();
+      encouragementAudioRef.current = null;
+    }
+  };
+
+  const announceCountdownEncouragement = async () => {
+    try {
+      const userResponse = await axios.get(`${API_BASE_URL}/api/user`, { withCredentials: true });
+      const userName = userResponse.data.name?.split(' ')[0] || 'there';
+
+      const cached = readEncouragementCache();
+      if (cached) {
+        setEncouragementMessage(cached.message);
+        setShowEncouragement(true);
+        playEncouragementAudio(cached.audioDataUrl);
+        fetchAndCacheEncouragement(API_BASE_URL, userName).catch(err => console.error('Failed to refresh encouragement audio', err));
+        return;
+      }
+
+      const fresh = await fetchAndCacheEncouragement(API_BASE_URL, userName);
+      if (fresh) {
+        setEncouragementMessage(fresh.message);
+        setShowEncouragement(true);
+        playEncouragementAudio(fresh.audioDataUrl);
+      } else {
+        setEncouragementMessage(`You got this, ${userName}!`);
+        setShowEncouragement(true);
+      }
+    } catch (err) {
+      console.error('Failed to generate encouragement:', err);
+      setEncouragementMessage('You got this!');
+      setShowEncouragement(true);
+    }
+  };
 
   // Update page title
   useEffect(() => {
@@ -50,6 +106,7 @@ function VideoRecording() {
       if (recordedVideoUrl) {
         URL.revokeObjectURL(recordedVideoUrl);
       }
+      stopEncouragementAudio();
     };
   }, [stream, recordedVideoUrl]);
 
@@ -102,7 +159,28 @@ function VideoRecording() {
     }
   };
 
-  const handleStartRecording = () => {
+  const handleStartRecording = async () => {
+    if (!stream || countdown !== null || isRecording) return;
+
+    // Start 5-second countdown and play encouragement
+    setCountdown(5);
+    announceCountdownEncouragement();
+    
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(countdownInterval);
+          setShowEncouragement(false);
+          stopEncouragementAudio();
+          startActualRecording();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const startActualRecording = () => {
     if (!stream) return;
 
     try {
@@ -154,6 +232,7 @@ function VideoRecording() {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
+      stopEncouragementAudio();
       
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -166,6 +245,9 @@ function VideoRecording() {
     if (recordedVideoUrl) {
       URL.revokeObjectURL(recordedVideoUrl);
     }
+    stopEncouragementAudio();
+    setShowEncouragement(false);
+    setCountdown(null);
     
     setRecordedVideoBlob(null);
     setRecordedVideoUrl(null);
@@ -285,13 +367,27 @@ function VideoRecording() {
 
         <div className="video-container">
           {!showPreview ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              className="video-preview"
-            />
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="video-preview"
+              />
+              {countdown !== null && (
+                <>
+                  <div className="countdown-overlay">
+                    {countdown}
+                  </div>
+                  {showEncouragement && encouragementMessage && (
+                    <div className="encouragement-message">
+                      {encouragementMessage}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           ) : recordedVideoUrl ? (
             <video
               key={recordedVideoUrl}
@@ -311,11 +407,15 @@ function VideoRecording() {
 
         {hasPermission && !showPreview && (
           <div className="recording-controls">
-            {!isRecording ? (
+            {!isRecording && countdown === null ? (
               <button className="record-button start" onClick={handleStartRecording}>
                 <span className="record-icon"></span>
                 Start Recording
               </button>
+            ) : countdown !== null ? (
+              <div className="countdown-message">
+                Get ready...
+              </div>
             ) : (
               <div className="recording-active-controls">
                 <div className="timer">

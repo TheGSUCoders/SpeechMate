@@ -62,9 +62,12 @@ export default function LoadingSpinner({ message }: LoadingSpinnerProps) {
           alt="SpeechMate" 
           className="loading-logo pulse" 
         />
+        {message && (
+          <p className="loading-message">{message}</p>
+        )}
         <div className="loading-tip-container">
           <p className="loading-tip-label">Speech Tip</p>
-          <p className="loading-tip-text">{message || currentTip}</p>
+          <p className="loading-tip-text">{currentTip}</p>
         </div>
       </div>
     </div>

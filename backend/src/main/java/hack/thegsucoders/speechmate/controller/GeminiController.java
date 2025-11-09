@@ -39,4 +39,11 @@ public class GeminiController {
         Map<String, Object> analysis = geminiService.analyzeSpeechPerformance(files, topic, audience, duration, goals);
         return ResponseEntity.ok(analysis);
     }
+
+    @PostMapping("/generate-encouragement")
+    public ResponseEntity<Map<String, String>> generateEncouragement(@RequestBody Map<String, String> request) {
+        String userName = request.getOrDefault("userName", "");
+        String encouragement = geminiService.generateEncouragement(userName);
+        return ResponseEntity.ok(Map.of("message", encouragement));
+    }
 }
