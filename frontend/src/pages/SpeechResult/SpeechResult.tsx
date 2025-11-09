@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { jsPDF } from 'jspdf';
 import ArrowLeftIcon from '../../components/icons/ArrowLeftIcon';
 import SaveIcon from '../../components/icons/SaveIcon';
 import DownloadIcon from '../../components/icons/DownloadIcon';
@@ -129,12 +130,13 @@ function SpeechResult() {
     alert('Speech saved! (Feature coming soon)');
   };
 
-  const handleDownload = () => {
-    const blob = new Blob([speechText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
+  const handleDownload = async () => {
+    // Generate and download the PDF
+    const pdfFile = await convertToPdf();
+    const url = URL.createObjectURL(pdfFile);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `speech-${state.originalParams.topic.replace(/\s+/g, '-')}.txt`;
+    a.download = pdfFile.name;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -142,16 +144,95 @@ function SpeechResult() {
   };
 
   const convertToPdf = async (): Promise<File> => {
-    // Create a simple PDF using canvas and converting to blob
-    // For a more robust solution, we'd use a library like jsPDF
-    const pdfContent = `
-      Speech Topic: ${state.originalParams.topic}
+    // Create a proper PDF using jsPDF
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - 2 * margin;
+    let yPosition = margin;
+
+    // Helper function to add text with automatic page breaks
+    const addText = (text: string, fontSize: number = 12, isBold: boolean = false) => {
+      doc.setFontSize(fontSize);
+      if (isBold) {
+        doc.setFont('helvetica', 'bold');
+      } else {
+        doc.setFont('helvetica', 'normal');
+      }
       
-      ${speechText}
-    `;
-    
-    const blob = new Blob([pdfContent], { type: 'application/pdf' });
-    const file = new File([blob], `speech-${state.originalParams.topic.replace(/\s+/g, '-')}.pdf`, {
+      const lines = doc.splitTextToSize(text, maxWidth);
+      
+      lines.forEach((line: string) => {
+        if (yPosition + 10 > pageHeight - margin) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.text(line, margin, yPosition);
+        yPosition += fontSize * 0.5;
+      });
+    };
+
+    // Add content to PDF
+    if (speechOutline) {
+      // Title
+      addText(speechOutline.title, 18, true);
+      yPosition += 10;
+
+      // Duration
+      addText(`Duration: ${speechOutline.goal_minutes} minute(s)`, 12, false);
+      yPosition += 5;
+
+      // Thesis
+      addText('Thesis:', 14, true);
+      yPosition += 2;
+      addText(speechOutline.thesis, 12, false);
+      yPosition += 10;
+
+      // Sections
+      speechOutline.sections.forEach((section, index) => {
+        addText(`${index + 1}. ${section.heading}`, 14, true);
+        yPosition += 2;
+        
+        addText(`Purpose: ${section.purpose}`, 11, false);
+        yPosition += 5;
+        
+        addText('Talking Points:', 12, true);
+        yPosition += 2;
+        section.talking_points.forEach(point => {
+          addText(`  • ${point}`, 11, false);
+          yPosition += 2;
+        });
+        yPosition += 3;
+        
+        addText('Evidence:', 12, true);
+        yPosition += 2;
+        section.evidence.forEach(ev => {
+          addText(`  • ${ev}`, 11, false);
+          yPosition += 2;
+        });
+        yPosition += 3;
+        
+        addText(`Time: ~${section.time_hint_sec} seconds`, 10, false);
+        yPosition += 10;
+      });
+
+      // Closing
+      addText('Closing', 14, true);
+      yPosition += 2;
+      addText(`Call to Action: ${speechOutline.closing.call_to_action}`, 12, false);
+      yPosition += 5;
+      addText(`Takeaway: ${speechOutline.closing.takeaway}`, 12, false);
+    } else {
+      // Fallback to plain text
+      addText(`Speech Topic: ${state.originalParams.topic}`, 16, true);
+      yPosition += 10;
+      addText(speechText, 12, false);
+    }
+
+    // Convert to blob and create File
+    const pdfBlob = doc.output('blob');
+    const file = new File([pdfBlob], `speech-${state.originalParams.topic.replace(/\s+/g, '-')}.pdf`, {
       type: 'application/pdf'
     });
     

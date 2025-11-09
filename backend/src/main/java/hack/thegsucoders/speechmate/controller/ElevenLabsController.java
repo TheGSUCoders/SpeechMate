@@ -15,7 +15,7 @@ public class ElevenLabsController {
     private final ElevenLabsService elevenLabsService;
 
     @PostMapping("/text-to-speech")
-    public ResponseEntity<byte[]> textToSpeech(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> textToSpeech(@RequestBody Map<String, String> request) {
         return elevenLabsService.generateSpeechFromRequest(request);
     }
 }

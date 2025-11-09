@@ -2,6 +2,7 @@ package hack.thegsucoders.speechmate.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,25 +24,26 @@ public class ElevenLabsService {
 			.build();
 	}
 
-	/**
-	 * Generate speech from request map with validation and defaults
-	 * Returns ResponseEntity with proper headers for audio file download
-	 */
-	public ResponseEntity<byte[]> generateSpeechFromRequest(Map<String, String> params) {
-		String text = params.get("text");
-		if (text == null || text.isBlank()) {
-			throw new IllegalArgumentException("text is required");
-		}
-		
-		String voiceId = params.getOrDefault("voiceId", "21m00Tcm4TlvDq8ikWAM");
-		String modelId = params.getOrDefault("modelId", "eleven_monolingual_v1");
-		
-		Map<String, Object> requestBody = Map.of(
-			"text", text,
-			"model_id", modelId
-		);
-
+	public ResponseEntity<?> generateSpeechFromRequest(Map<String, String> params) {
 		try {
+			String text = params.get("text");
+			if (text == null || text.isBlank()) {
+				return ResponseEntity.badRequest().body(Map.of("error", "text is required"));
+			}
+			
+			if (apiKey == null || apiKey.isBlank() || apiKey.equals("${ELEVENLABS_API_KEY}")) {
+				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+						.body(Map.of("error", "Text-to-speech service is not configured"));
+			}
+			
+			String voiceId = params.getOrDefault("voiceId", "21m00Tcm4TlvDq8ikWAM");
+			String modelId = params.getOrDefault("modelId", "eleven_monolingual_v1");
+			
+			Map<String, Object> requestBody = Map.of(
+				"text", text,
+				"model_id", modelId
+			);
+
 			byte[] audioBytes = webClient.post()
 				.uri("/text-to-speech/" + voiceId)
 				.header("xi-api-key", apiKey)
@@ -60,7 +62,8 @@ public class ElevenLabsService {
 				.headers(headers)
 				.body(audioBytes);
 		} catch (Exception e) {
-			throw new RuntimeException("Failed to generate speech: " + e.getMessage(), e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(Map.of("error", "Failed to generate speech: " + e.getMessage()));
 		}
 	}
 }
